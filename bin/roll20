@@ -194,8 +194,8 @@ class Roll20:
         self.argsCheck("delete", 4)
         game_name = sys.argv[2]
         game_id = self.getCampaign(game_name)
-        for script_path in sys.argv[3:]:
-            print(f'Deleting {script_path}')
+        for script_name in sys.argv[3:]:
+            print(f'Deleting {script_name}')
             script_id = self.getScript(game_id, script_name)     
             self.sendDelete(game_name, script_name)
         print("Success")
