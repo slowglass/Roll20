@@ -7,15 +7,16 @@ MarkStart('Conditions.js');
  * 
  * COMMAND !cond || !conditions
  * !conditions [CONDITION] - Shows condition.
+ * !conditions reset - Resets the configuration to default.
  * !conditions menu - Provides condition Menus.
  * !conditions show - Shows condition on selected token(s).
- * !conditions help - Shows help menu.
  * 
  * !conditions add [condtion(s)] - Add condition(s) to selected tokens, eg. !sm add prone paralyzed
  * !conditions remove [condtion(s)] - Remove condition(s) from selected tokens, eg. !sm remove prone paralyzed
  * !conditions toggle [condtion(s)] - Toggles condition(s) of selected tokens, eg. !sm toggle prone paralyzed
  * 
  * TODO
+ * !conditions help - Shows help menu.
  * !conditions config add [name] [description]
  * !conditions config remove [name] [description]
  * !conditions export - Exports the config (with conditions).
@@ -43,6 +44,11 @@ var Conditions = Conditions || (function() {
         let ret = config.markers[name];
         return ret!==undefined ? ret : "Condition has no description";
     },
+    getConditionId = (name) => {
+        if(!_.has(tokenMakers, name))
+            return undefined;
+        return tokenMakers[name].id;
+    },
     getStatusMarkers = (token) => { return token.get('statusmarkers').split(",");},
     getIcon = (name, style='', size='24px') => {
         let url = tokenMakers[name].url;
@@ -55,6 +61,9 @@ var Conditions = Conditions || (function() {
         iconStyle += style;
 
         return '<div style="'+iconStyle+'">'+'</div>';
+    },
+    accessGranted = (method, playerid) => {
+        return (config.access === "All" || playerIsGM(playerid));
     },
     makeUL = (items, listStyle, itemStyle) => {
         let list = '<ul style="'+listStyle+'">';
@@ -70,10 +79,7 @@ var Conditions = Conditions || (function() {
     initialise = () => {
         initMarkers();
         getDefaults();
-        Utils.debug("Init");
-        Utils.debug("Defaults:", defaults);
-        config = Utils.getState(module, defaults, true); // TODO: Make false once debuging over
-        Utils.debug("Config:", config);
+        config = Utils.getState(module, defaults, false);
         Utils.announce(module, version, 'UPLOAD-TIMESTAMP');
     },
     registerEventHandlers = () => {
@@ -119,13 +125,17 @@ var Conditions = Conditions || (function() {
                 break;
 
             case 'add': case 'remove': case 'toggle':
-                updateTokenMarkers(msgData.subCommand, msgData.args, msgData.tokens);
+                updateTokenMarkers(msgData.playerid, msgData.subCommand, msgData.args, msgData.tokens);
                 break;
 
             case 'menu':
                 printConditionMenu(msgData.playerid);
                 break;
                 
+            case 'reset':
+                if(!accessGranted("config", playerid)) Utils.getState(module, defaults, true);
+                break;
+
             default:
                 printCondition(msgData.subCommand);
                 break;
@@ -137,7 +147,6 @@ var Conditions = Conditions || (function() {
         tokens.forEach((token) => {
             if ('token' !== token.get("_subtype")) return;
             let statusmarkers = getStatusMarkers(token);
-            Utils.debug(JSON.stringify(statusmarkers));
             let listItems = [];
             statusmarkers.forEach(tag => {
                 if (!tag.includes("::")) return;
@@ -152,7 +161,53 @@ var Conditions = Conditions || (function() {
         });
         Utils.printInfo('', 'Conditions', '', contents, {title_tag: 'h2'}, infoStyle);
     },
-    updateTokenMarkers = () => {},
+    updateTokenMarkers = (playerid, cmd, args, tokens) => {
+        if(!accessGranted("updateToken", playerid)) return;
+
+        if(!tokens.length){
+            Utils.printInfo('', '', '', 'No tokens are selected.', {title_tag: 'h2'}, infoStyle);
+            return;
+        }
+        if(!args.length){
+            Utils.printInfo('', '', '', 'No condition(s) were given.', {title_tag: 'h2'}, infoStyle);
+            return;
+        }
+
+        _updateTokenMarkers(cmd, args, tokens);
+    },
+    _updateTokenMarkers = (cmd, conditions, tokens) => {
+        conditions.forEach(condition => {
+            let id = getConditionId(condition);
+            if (id === undefined) {
+                Utils.printInfo('', '', '', 'The condition `'+condition+'` is not supported.', {title_tag: 'h2'}, infoStyle);
+                return;
+            }
+            Utils.debug("ID:", id);
+            let announce = false;
+            let tag = condition + "::" +id;
+            tokens.forEach(token => {
+                let statusmarkers = token.get('statusmarkers').split(",");
+                let add = (cmd === 'add') ? true : (cmd === 'toggle') ? !statusmarkers.includes(tag) : false;
+                
+                if (add)
+                {
+                    if (!statusmarkers.includes(tag)) 
+                    {
+                        announce = true;
+                        statusmarkers.push(tag);
+                    }
+                }
+                else
+                {
+                    let markerIndex = statusmarkers.indexOf(tag);
+                    statusmarkers.splice(markerIndex, 1);
+                }
+                Utils.debug("Status Markers:", statusmarkers.join(','));
+                token.set("statusmarkers", statusmarkers.join(','));
+            });
+            if (announce) printCondition(condition);
+        });
+    },
     printConditionMenu = (playerid) => {
         if(!playerIsGM(playerid)) return;
 

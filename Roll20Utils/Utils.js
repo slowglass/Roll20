@@ -17,8 +17,6 @@ var Utils = Utils || (function() {
     debug = (msg, details) => {
         let m = msg;
         if (details !== undefined) {
-            log(typeof details);
-            log(details instanceof String);
             if (typeof details === 'string' || details instanceof String)
                 m += details;
             else
