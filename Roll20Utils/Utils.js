@@ -14,8 +14,17 @@ var Utils = Utils || (function() {
     const version = "0.1",
     debugStyle = "overflow: hidden; background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;",
     name = "cjd:Utils",
-    debug = (msg) => {
-        sendChat("Utils:DEBUG", "/w gm " + '<div style="'+debugStyle+'">'+msg+'</div>', null, {noarchive:true});
+    debug = (msg, details) => {
+        let m = msg;
+        if (details !== undefined) {
+            log(typeof details);
+            log(details instanceof String);
+            if (typeof details === 'string' || details instanceof String)
+                m += details;
+            else
+                m += JSON.stringify(details);
+        }
+        sendChat("Utils:DEBUG", "/w gm " + '<div style="'+debugStyle+'">'+m+'</div>', null, {noarchive:true});
     },
     getState = (name, defaults, override) => {
         if(!_.has(state, name)) {
