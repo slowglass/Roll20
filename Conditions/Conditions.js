@@ -26,7 +26,7 @@ var Conditions = Conditions || (function() {
 
     let defaults = {};
     let config = {};
-    let tokenUrls = {};
+    let tokenMakers = {};
     const version = "0.1",
     module = "cjd:Conditions",
 
@@ -37,29 +37,43 @@ var Conditions = Conditions || (function() {
 
     getVersion = () => { return version; },
     getConditionDescription = (name) => {
-        if(!_.has(tokenUrls, name))
+        if(!_.has(tokenMakers, name))
             return "Condition is not supported";
 
         let ret = config.markers[name];
         return ret!==undefined ? ret : "Condition has no description";
     },
+    getStatusMarkers = (token) => { return token.get('statusmarkers').split(",");},
     getIcon = (name, style='', size='24px') => {
-        let url = tokenUrls[name];
-        Utils.debug("Url: "+url);
+        let url = tokenMakers[name].url;
         if (url === undefined) return '';
 
         let iconStyle = 'width: '+size+'; height: '+size+';';
         iconStyle += 'background-size: '+size+' '+size+';';
-        iconStyle += 'background-image: url('+tokenUrls[name]+');'
+        iconStyle += 'background-image: url('+url+');'
         iconStyle += 'background-repeat: no-repeat;'
         iconStyle += style;
 
         return '<div style="'+iconStyle+'">'+'</div>';
     },
+    makeUL = (items, listStyle, itemStyle) => {
+        let list = '<ul style="'+listStyle+'">';
+        items.forEach((item) => {
+            list += '<li style="'+itemStyle+'">'+item+'</li>';
+        });
+        list += '</ul>';
+        return list;
+    },
+    makeA = (text, href, style, alt) => {
+        return '<a style="'+style+'" href="'+href+'" title="'+alt+'">'+text+'</a>';
+    },
     initialise = () => {
         initMarkers();
         getDefaults();
-        config = Utils.getState(module, defaults. true); // TODO: Make false once debuging over
+        Utils.debug("Init");
+        Utils.debug("Defaults:", defaults);
+        config = Utils.getState(module, defaults, true); // TODO: Make false once debuging over
+        Utils.debug("Config:", config);
         Utils.announce(module, version, 'UPLOAD-TIMESTAMP');
     },
     registerEventHandlers = () => {
@@ -69,9 +83,9 @@ var Conditions = Conditions || (function() {
         // Handle condition descriptions when other APIs changing the statusmarkers on a token?
     },
     initMarkers = () => { 
-        let tokenMarkers = JSON.parse(Campaign().get("token_markers"));
-        tokenMarkers.forEach(e =>{
-            tokenUrls[e.name] = e.url;
+        let markers = JSON.parse(Campaign().get("token_markers"));
+        markers.forEach(e =>{
+            tokenMakers[e.name] = { id: e.id, url: e.url};
         });
     },
     getDefaults = (reset) => {
@@ -82,7 +96,11 @@ var Conditions = Conditions || (function() {
             },
             markers: {
                 "Blinded": '<p>A blinded creature can’t see and automatically fails any ability check that requires sight.</p>'+
-                    '<p>Attack rolls against the creature have advantage, and the creature’s Attack rolls have disadvantage.</p>'
+                    '<p>Attack rolls against the creature have advantage, and the creature’s Attack rolls have disadvantage.</p>',
+                "Prone": '<p>XYZ</p>',
+                "Bane": '<p>XYZ</p>',
+                "Sacred-Weapon": '<p>XYZ</p>',
+                "Mage-Hand": '<p>XYZ</p>'
             },
         };
     },
@@ -105,7 +123,8 @@ var Conditions = Conditions || (function() {
                 break;
 
             case 'menu':
-                printConditionMenu();
+                printConditionMenu(msgData.playerid);
+                break;
                 
             default:
                 printCondition(msgData.subCommand);
@@ -113,9 +132,37 @@ var Conditions = Conditions || (function() {
         }
     },
     printHelpInfo = () => {},
-    printTokenConditions = () => {},
+    printTokenConditions = (tokens) => {
+        let contents = '';
+        tokens.forEach((token) => {
+            if ('token' !== token.get("_subtype")) return;
+            let statusmarkers = getStatusMarkers(token);
+            Utils.debug(JSON.stringify(statusmarkers));
+            let listItems = [];
+            statusmarkers.forEach(tag => {
+                if (!tag.includes("::")) return;
+                let marker=tag.split(':')[0];
+                let anchor = makeA(marker, "!cond "+marker, "background-color: #fff; padding: 5px; color: #000; text-align: center;", 'Show Condition '+marker);
+                listItems.push('<span>'+anchor+'</span> ');
+            });
+            let list = "<i>None</i>";
+            if (listItems.length>0)
+                list = makeUL(listItems, listStyle + ' overflow:hidden;', 'padding-left: 1em; overflow: hidden')
+            contents += '<b>'+token.get('name')+'</b><br></br>' + list +"<hr>";
+        });
+        Utils.printInfo('', 'Conditions', '', contents, {title_tag: 'h2'}, infoStyle);
+    },
     updateTokenMarkers = () => {},
-    printConditionMenu = () => {},
+    printConditionMenu = (playerid) => {
+        if(!playerIsGM(playerid)) return;
+
+        let contents = '';
+        for(let name in config.markers){
+            let desc = config.markers[name];
+            contents += makeA(getIcon(name), '!cond toggle '+name, buttonStyle + 'float: none; margin-right: 5px;', "Toggle "+name);
+        }
+        Utils.printInfo('', 'Toggle Conditions', '', contents, {title_tag: 'h2'}, infoStyle);
+    },
     printCondition = (name) => {
         let description = getConditionDescription(name);
         if (description === undefined) return;
