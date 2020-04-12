@@ -31,8 +31,6 @@ var Utils = Utils || (function() {
         if (override || Object.keys(state[name]).length === 0) {
             state[name] = JSON.parse(JSON.stringify(defaults));
         }
-
-        log("4");
         return state[name];
     },
     announce = (name, version, date) => { log('==> '+name+': ' + version + '  - Uploaded @ ['+date+']');},
@@ -48,7 +46,6 @@ var Utils = Utils || (function() {
         if(msg.selected && msg.selected.length){
             msgInfo.tokens = msg.selected.map(s => getObj(s._type, s._id));
         }
-        debug(msgInfo.command + ":" + msgInfo.subCommand);
         return msgInfo;
     };
     announce(name, version, 'UPLOAD-TIMESTAMP');
@@ -97,7 +94,7 @@ var HtmlUtils = HtmlUtils || (function() {
     },
     a = (text, settings) => {
         currentSettings = settings;
-        return '<a '+ style() + attr('href') + attr('alt') + '>' + text + '</a>';
+        return '<a '+ style() + attr('href')  + attr('title') +  '>' + text + '</a>';
     },
     ul = (items, settings) => {
         currentSettings = settings;

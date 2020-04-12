@@ -47,6 +47,9 @@ var Conditions = Conditions || (function() {
             return undefined;
         return tokenMakers[name].id;
     },
+    getConditionAsName = (name) => {
+        return name.replace(/-/g, ' ');
+    },
     getStatusMarkers = (token) => { return token.get('statusmarkers').split(",");},
     getIcon = (name, style='', size='24px') => {
         let url = tokenMakers[name].url;
@@ -88,13 +91,98 @@ var Conditions = Conditions || (function() {
                 sendOnlyToGM: false,
             },
             markers: {
-                "Blinded": '<p>A blinded creature can’t see and automatically fails any ability check that requires sight.</p>'+
+                // Conditions
+                'Blinded': 
+                    '<p>A blinded creature can’t see and automatically fails any ability check that requires sight.</p>'+
                     '<p>Attack rolls against the creature have advantage, and the creature’s Attack rolls have disadvantage.</p>',
-                "Prone": '<p>XYZ</p>',
-                "Bane": '<p>XYZ</p>',
-                "Sacred-Weapon": '<p>XYZ</p>',
-                "Mage-Hand": '<p>XYZ</p>'
-            },
+                'Charmed':
+                    '<p>A charmed creature can’t Attack the charmer or target the charmer with harmful Abilities or magical effects.</p>'+
+                    '<p>The charmer has advantage on any ability check to interact socially with the creature.</p>',
+                'Deafened':
+                    '<p>A deafened creature can’t hear and automatically fails any ability check that requires hearing.</p>',
+                'Frightened':
+                    '<p>A frightened creature has disadvantage on Ability Checks and Attack rolls while the source of its fear is within line of sight.</p>'+
+                    '<p>The creature can’t willingly move closer to the source of its fear.</p>',
+                'Grappled':
+                    '<p>A grappled creature’s speed becomes 0, and it can’t benefit from any bonus to its speed.</p> <p>The condition ends if the Grappler is <i>incapacitated</i>.</p>'+
+                    '<p>The condition also ends if an effect removes the grappled creature from the reach of the Grappler or Grappling effect, such as when a creature is hurled away by the Thunderwave spell.</p>',
+                'Incapacitated':
+                    '<p>An incapacitated creature can’t take actions or reactions.</p>',
+               'Invisibility':
+                    '<p>An invisible creature is impossible to see without the aid of magic or a Special sense. For the purpose of Hiding, the creature is heavily obscured. '+
+                    'The creature’s location can be detected by any noise it makes or any tracks it leaves.</p> <p>Attack rolls against the creature have disadvantage, and the creature’s Attack rolls have advantage.</p>',
+                'Paralyzed':
+                    '<p>A paralyzed creature is <i>incapacitated</i> and can’t move or speak.</p> <p>The creature automatically fails Strength and Dexterity saving throws.</p>'+
+                    '<p>Attack rolls against the creature have advantage.</p> <p>Any Attack that hits the creature is a critical hit if the attacker is within 5 feet of the creature.</p>',
+               'Petrified':
+                    '<p>A petrified creature is transformed, along with any nonmagical object it is wearing or carrying, into a solid inanimate substance (usually stone). '+
+                    'Its weight increases by a factor of ten, and it ceases aging.</p>'+
+                    '<p>The creature is <i>incapacitated</i>, can’t move or speak, and is unaware of its surroundings.</p>'+
+                    '<p>Attack rolls against the creature have advantage.</p>'+
+                    '<p>The creature automatically fails Strength and Dexterity saving throws.</p>'+
+                    '<p>The creature has Resistance to all damage.</p>'+
+                    '<p>The creature is immune to poison and disease, although a poison or disease already in its system is suspended, not neutralized.</p>',
+                'Poisoned':
+                    '<p>A poisoned creature has disadvantage on Attack rolls and Ability Checks.</p>',
+                'Prone':
+                    '<p>A prone creature’s only Movement option is to crawl, unless it stands up and thereby ends the condition.</p>'+
+                    '<p>The creature has disadvantage on Attack rolls.</p>'+
+                    '<p>An Attack roll against the creature has advantage if the attacker is within 5 feet of the creature. Otherwise, the Attack roll has disadvantage.</p>',
+                'Restrained':
+                    '<p>A restrained creature’s speed becomes 0, and it can’t benefit from any bonus to its speed.</p>'+
+                    '<p>Attack rolls against the creature have advantage, and the creature’s Attack rolls have disadvantage.</p>'+
+                    '<p>The creature has disadvantage on Dexterity saving throws.</p>',
+                'Stunned':
+                    '<p>A stunned creature is <i>incapacitated</i>, can’t move, and can speak only falteringly.</p>'+
+                    '<p>The creature automatically fails Strength and Dexterity saving throws.</p>'+
+                    '<p>Attack rolls against the creature have advantage.</p>',
+                'Unconscious':
+                    '<p>An unconscious creature is <i>incapacitated</i>, can’t move or speak, and is unaware of its surroundings.</p>'+
+                    '<p>The creature drops whatever it’s holding and falls prone.</p>'+
+                    '<p>The creature automatically fails Strength and Dexterity saving throws.</p>'+
+                    '<p>Attack rolls against the creature have advantage.</p>'+
+                    '<p>Any Attack that hits the creature is a critical hit if the attacker is within 5 feet of the creature.</p>',
+                // Spell Effects
+                'Vicious-Mockery':
+                    '<p>Creature has disadvantage on the next Attack roll it makes before the end of its next turn</p>',
+                'Inspiration':
+                    'Bardic Inspiration grants the creature a die (d6) that it can use on '+
+                    '<b>one</b> ability check, attack roll, saving throw, weapon damage roll it makes. '+
+                    'It can also use the die to add to it AC agaist on attack',
+                'Bane':
+                    '<p>Whenever creature makes an attack roll or a saving throw while under the <b>Bane</b> effect, the creature must roll a d4 and subtract the number rolled from the attack roll or saving throw.</p>',
+                'Charm':
+                    '<p>Charmed creature regars the caster of charm as a friendly acquaintance.</p>'+
+                    '<p>This spell ends if the caster or any of its companions do anything harmful to it.</p>'+
+                    '<p>Once the spell ends, the creature knows that it was charmed</p>',
+               'Command':
+                    '<p>The commanded creature must follow the command it has been given on its next turn.</p>',
+                'Heat-Metal':
+                    '<p>A piece of metal the creature is holding / wearing is hot. The caster can reapply the damage on as a bonus action</p>',
+                'Mage-Hand':
+                    '<p>A spectral, floating hand appears at a point you choose within range. The hand lasts for the duration or until you dismiss it as an action. '+
+                    'The hand vanishes if it is ever more than 30 feet away from you or if you cast this spell again.</p><p>You can use your action to control the hand. '+
+                    'You can use the hand to manipulate an object, open an unlocked door or container, stow or retrieve an item from an open container, or pour the contents out of a vial. '+
+                    'You can move the hand up to 30 feet each time you use it.</p><p>The hand can’t attack, activate magic items, or carry more than 10 pounds.</p>',
+                'Sanctuary':
+                    '<p>Any creature who targets the warded creature with an attack or a harmful spell must first make a Wisdom saving throw. '+
+                    'On a failed save, the creature must choose a new target or lose the attack or spell. '+
+                    'This spell doesn\'t protect the warded creature from area effects, such as the explosion of a fireball.</p>'+
+                    '<p>If the warded creature makes an attack, casts a spell that affects an enemy, or deals damage to another creature, this spell ends.</p>',
+                'Sacred-Weapon':
+                    '<p>Creature adds its Charisma bonus at all attack rolls that it makes. '+
+                    'Its weapon is surrounded in flashes of lightning, emitting bright light in a 20-foot radius and a dim light 20 feet beyond that. '+
+                    'The creature\'s weapon is magical while this effect lasts.</p>',
+                'Protection-from-Good-and-Evil':
+                        '<p>Protected creature is protected against certain types of creatures: aberrations, celestials, elementals, fey, fiends, and undead.</p>' +
+                        '<p>The protection grants several benefits. Creatures of those types have disadvantage on attack rolls against the protected creature. ' +
+                        'The protected creature also can\'t be charmed, frightened, or possessed by them. '+
+                        'If the protected creature is already charmed, frightened, or possessed by such a creature, the protected creature has advantage on any new saving throw against the relevant effect.</p>',
+                'Shield-of-Faith':
+                    'Creature gains +2 bonus to AC while Shield of Faith is in effect.',
+                'Sleep':
+                    'Creature gains +2 bonus to AC while Shield of Faith is in effect.'
+            }
         };
     },
     onMarkerChange = (obj, prev) => {
@@ -140,7 +228,9 @@ var Conditions = Conditions || (function() {
                 break;
                 
             case 'reset':
-                if(!accessGranted("config", playerid)) Utils.getState(module, defaults, true);
+                Utils.debug("Reset", accessGranted("config", msgData.playerid));
+                if(accessGranted("config", msgData.playerid)) 
+                    config = Utils.getState(module, defaults, true);
                 break;
 
             default:
@@ -172,7 +262,7 @@ var Conditions = Conditions || (function() {
             statusmarkers.forEach(tag => {
                 if (!tag.includes("::")) return;
                 let marker=tag.split(':')[0];
-                let anchor = HtmlUtils.a(marker, {alt:'Show Condition '+marker, href:'!cond '+marker, type:"link"});
+                let anchor = HtmlUtils.a(getConditionAsName(marker), {title:'Show Condition '+marker, href:'!cond '+marker, type:"link"});
                 listItems.push('<span>'+anchor+'</span> ');
             });
             let list = "<i>None</i>";
@@ -182,25 +272,22 @@ var Conditions = Conditions || (function() {
         });
         HtmlUtils.printInfo('', 'Conditions', contents, {title_tag:'h2', type: 'info'});
     },
-    updateTokenMarkers = (playerid, cmd, args, tokens) => {
+    updateTokenMarkers = (playerid, cmd, conditions, tokens) => {
         if(!accessGranted("updateToken", playerid)) return;
 
-        if(!tokens.length){
+        if(!tokens.length) {
             HtmlUtils.printInfo('', '', 'No tokens are selected.', {type: 'info'});
             return;
         }
-        if(!args.length){
+        if(!conditions.length) {
             HtmlUtils.printInfo('', '', 'No condition(s) were given.', {type: 'info'});
             return;
         }
-
-        _updateTokenMarkers(cmd, args, tokens);
-    },
-    _updateTokenMarkers = (cmd, conditions, tokens) => {
         conditions.forEach(condition => {
             let id = getConditionId(condition);
             if (id === undefined) {
-                HtmlUtils.printInfo('', '', `The condition ${condition} is not supported.`, {type: 'info'});
+                let condition_name = getConditionAsName(condition);
+                HtmlUtils.printInfo('', '', `The condition ${condition_name} is not supported.`, {type: 'info'});
                 return;
             }
             Utils.debug("ID:", id);
@@ -233,15 +320,18 @@ var Conditions = Conditions || (function() {
 
         let contents = '';
         for(let name in config.markers){
+            if (getConditionId(name) === undefined) continue;
             let desc = config.markers[name];
-            contents += HtmlUtils.a(getIcon(name), {alt:'Toggle '+name, href:'!cond toggle '+name, type:'button', style:'float: none; margin-right: 5px;'});
+            contents += HtmlUtils.a(getIcon(name), {title:'Toggle '+getConditionAsName(name), href:'!cond toggle '+name, type:'button', style:'float: none; margin-right: 5px;'});
         }
         HtmlUtils.printInfo('', 'Toggle Conditions', contents, {title_tag: 'h2', type: 'info'});
     },
-    printCondition = (name) => {
-        let description = getConditionDescription(name);
+    printCondition = (condition) => {
+        let name = getConditionAsName(condition);
+        let description = getConditionDescription(condition);
+        if (getConditionId(condition) === undefined) return;
         if (description === undefined) return;
-        let icon = getIcon(name, headerIconStyle, '30px');
+        let icon = getIcon(condition, headerIconStyle, '30px');
         HtmlUtils.printInfo('', name, description, {icon:icon, title_tag: 'h2', type: 'info'});
     };
 
