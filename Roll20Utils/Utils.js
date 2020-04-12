@@ -50,21 +50,80 @@ var Utils = Utils || (function() {
         }
         debug(msgInfo.command + ":" + msgInfo.subCommand);
         return msgInfo;
-    },
-    printInfo = (module, title, icon, text, settings, style) => {
-        title = heading(icon, title, settings.title_tag);
-        sendChat(module, '<div style="'+style+'">'+title+text+'</div>', null, {noarchive:true});
-    },
-    heading = (icon, title, tag) => {
-        return '<'+tag+' style="margin-bottom: 10px;">'+icon+'<span style="vertical-align: top;">'+title+'</span></'+tag+'>';
     };
     announce(name, version, 'UPLOAD-TIMESTAMP');
     return {
         debug,
         parseMessage,
-        printInfo,
         getState,
         announce
     };
+})();
+
+var HtmlUtils = HtmlUtils || (function() {
+    'use strict';
+    let currentSettings = {};
+    const version = "0.1",
+    name = "cjd:Utils",
+    styles = {
+        link: "background-color: #fff; padding: 5px; color: #000; text-align: center;",
+        button: "background-color: #000; border: 1px solid #292929; border-radius: 3px; padding: 5px; color: #fff; text-align: center; float: right;",
+        list: 'list-style: none; padding: 0; margin: 0; overflow:hidden;',
+        listItem:'padding-left: 1em; overflow: hidden',
+
+        info: "overflow: hidden; background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;",
+        //headerIcon: 'margin-right: 5px; margin-top: 5px; display: inline-block;'
+    },
+    get = (name, fallback='') => {
+        return (undefined !== currentSettings[name]) ? currentSettings[name] : fallback;
+    },
+    attr = (name) => {
+        let txt = '';
+        if (undefined !== currentSettings[name]) txt+=currentSettings[name];
+        if (txt !== '') return `${name}='${txt}'`;
+        else return txt;
+    },
+    style = (prefix) => {
+        let typeKey= (undefined===prefix) ? 'type' : `${prefix}Type`;
+        let styleKey= (undefined===prefix) ? 'style' : `${prefix}Style`;
+        let t = currentSettings[typeKey];
+        let txt = '';
+        if (undefined !== t) {
+            if (undefined !== styles[t]) txt += styles[t];
+        }
+        if (undefined !== currentSettings[styleKey]) txt+=currentSettings[styleKey];
+        if (txt !== '') return `style='${txt}'`;
+        else return txt;
+    },
+    a = (text, settings) => {
+        currentSettings = settings;
+        return '<a '+ style() + attr('href') + attr('alt') + '>' + text + '</a>';
+    },
+    ul = (items, settings) => {
+        currentSettings = settings;
+
+        let html='<ul ' + style('list') + '>';
+        items.forEach((item) => { html += '<li '+ style('listItem') + '>'+item+'</li>'; });
+        html += '</ul>';
+        return html;
+    },
+    h = (text) => {
+        if (text === '') return '';
+        let tag = get('title_tag', 'div');
+        let icon = get('icon');
+        if (icon === '')
+            return `<${tag} style="margin-bottom: 10px;">${text}</${tag}>`;
+        else
+        return   `<${tag} style="margin-bottom: 10px;">${icon}<span style="vertical-align: top;">${text}</span></${tag}>`;
+    },
+    printInfo = (module, title, text, settings) => {
+        currentSettings = settings;
+        let heading = h(title);
+        sendChat(module, '<div '+style()+'>'+heading+text+'</div>', null, {noarchive:true});
+    };
+    return {
+        a, ul, h,
+        printInfo
+    }
 })();
 MarkStop('Utils.js')

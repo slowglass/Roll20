@@ -28,13 +28,11 @@ var Conditions = Conditions || (function() {
     let defaults = {};
     let config = {};
     let tokenMakers = {};
+    let prev = {};
     const version = "0.1",
     module = "cjd:Conditions",
 
-    infoStyle = "overflow: hidden; background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;",
     headerIconStyle = 'margin-right: 5px; margin-top: 5px; display: inline-block;',
-    buttonStyle = "background-color: #000; border: 1px solid #292929; border-radius: 3px; padding: 5px; color: #fff; text-align: center; float: right;",
-    listStyle = 'list-style: none; padding: 0; margin: 0;',
 
     getVersion = () => { return version; },
     getConditionDescription = (name) => {
@@ -64,17 +62,6 @@ var Conditions = Conditions || (function() {
     },
     accessGranted = (method, playerid) => {
         return (config.access === "All" || playerIsGM(playerid));
-    },
-    makeUL = (items, listStyle, itemStyle) => {
-        let list = '<ul style="'+listStyle+'">';
-        items.forEach((item) => {
-            list += '<li style="'+itemStyle+'">'+item+'</li>';
-        });
-        list += '</ul>';
-        return list;
-    },
-    makeA = (text, href, style, alt) => {
-        return '<a style="'+style+'" href="'+href+'" title="'+alt+'">'+text+'</a>';
     },
     initialise = () => {
         initMarkers();
@@ -110,7 +97,27 @@ var Conditions = Conditions || (function() {
             },
         };
     },
-    onMarkerChange = () => {},
+    onMarkerChange = (obj, prev) => {
+        let prevStatusMarkers = (typeof prev.get === 'function') ? prev.get('statusmarkers') : prev.statusmarkers;
+        if (typeof prev.statusmarkers !== 'string') return;
+
+        let currentStatusMarkers = obj.get('statusmarkers');
+        if (prevStatusMarkers === currentStatusMarkers) return;
+
+        // Create arrays from the statusmarkers strings.
+        let arrPrev = prev.statusmarkers.split(",");
+        let arrCurrent = currentStatusMarkers.split(",");
+
+        // Loop through the statusmarkers array.
+        arrCurrent.forEach(tag => {
+            if (!tag.includes("::")) return;
+            if(!arrPrev.includes(tag)) {
+                let marker=tag.split(':')[0];
+                if (!_.has(config.markers, marker)) return;
+                printCondition(marker);
+            }
+        });
+    },
     onChat = (msg) => {
         let msgData = Utils.parseMessage(msg, ["!cond", "!conditions"]);
         if (msgData === undefined) return;
@@ -141,7 +148,21 @@ var Conditions = Conditions || (function() {
                 break;
         }
     },
-    printHelpInfo = () => {},
+    printHelpInfo = () => {
+        let listItems = [
+            '<span style="text-decoration: underline">!cond help</span> - Shows this menu.',
+            '<span style="text-decoration: underline">!cond [CONDITION]</span> - Shows the description of the condition entered.',
+            '&nbsp;',
+            '<span style="text-decoration: underline">!cond add [CONDITIONS]</span> - Add the given condition(s) to the selected token(s).',
+            '<span style="text-decoration: underline">!cond toggle [CONDITIONS]</span> - Toggles the given condition(s) on the selected token(s).',
+            '<span style="text-decoration: underline">!cond remove [CONDITIONS]</span> - Removes the given condition(s) from the selected token(s).',
+            '<span style="text-decoration: underline">!cond show [CONDITIONS]</span> - Show the current condition(s) from the selected token(s).',
+            '&nbsp;'];
+        
+
+        let contents = HtmlUtils.ul(listItems, {listType:'list'});
+        HtmlUtils.printInfo('', 'Usage', contents, {title_tag:'h2', type: 'info'});
+    },
     printTokenConditions = (tokens) => {
         let contents = '';
         tokens.forEach((token) => {
@@ -151,25 +172,25 @@ var Conditions = Conditions || (function() {
             statusmarkers.forEach(tag => {
                 if (!tag.includes("::")) return;
                 let marker=tag.split(':')[0];
-                let anchor = makeA(marker, "!cond "+marker, "background-color: #fff; padding: 5px; color: #000; text-align: center;", 'Show Condition '+marker);
+                let anchor = HtmlUtils.a(marker, {alt:'Show Condition '+marker, href:'!cond '+marker, type:"link"});
                 listItems.push('<span>'+anchor+'</span> ');
             });
             let list = "<i>None</i>";
             if (listItems.length>0)
-                list = makeUL(listItems, listStyle + ' overflow:hidden;', 'padding-left: 1em; overflow: hidden')
+                list = HtmlUtils.ul(listItems, {listType:'list', itemType:'listItem'});
             contents += '<b>'+token.get('name')+'</b><br></br>' + list +"<hr>";
         });
-        Utils.printInfo('', 'Conditions', '', contents, {title_tag: 'h2'}, infoStyle);
+        HtmlUtils.printInfo('', 'Conditions', contents, {title_tag:'h2', type: 'info'});
     },
     updateTokenMarkers = (playerid, cmd, args, tokens) => {
         if(!accessGranted("updateToken", playerid)) return;
 
         if(!tokens.length){
-            Utils.printInfo('', '', '', 'No tokens are selected.', {title_tag: 'h2'}, infoStyle);
+            HtmlUtils.printInfo('', '', 'No tokens are selected.', {type: 'info'});
             return;
         }
         if(!args.length){
-            Utils.printInfo('', '', '', 'No condition(s) were given.', {title_tag: 'h2'}, infoStyle);
+            HtmlUtils.printInfo('', '', 'No condition(s) were given.', {type: 'info'});
             return;
         }
 
@@ -179,7 +200,7 @@ var Conditions = Conditions || (function() {
         conditions.forEach(condition => {
             let id = getConditionId(condition);
             if (id === undefined) {
-                Utils.printInfo('', '', '', 'The condition `'+condition+'` is not supported.', {title_tag: 'h2'}, infoStyle);
+                HtmlUtils.printInfo('', '', `The condition ${condition} is not supported.`, {type: 'info'});
                 return;
             }
             Utils.debug("ID:", id);
@@ -202,7 +223,6 @@ var Conditions = Conditions || (function() {
                     let markerIndex = statusmarkers.indexOf(tag);
                     statusmarkers.splice(markerIndex, 1);
                 }
-                Utils.debug("Status Markers:", statusmarkers.join(','));
                 token.set("statusmarkers", statusmarkers.join(','));
             });
             if (announce) printCondition(condition);
@@ -214,15 +234,15 @@ var Conditions = Conditions || (function() {
         let contents = '';
         for(let name in config.markers){
             let desc = config.markers[name];
-            contents += makeA(getIcon(name), '!cond toggle '+name, buttonStyle + 'float: none; margin-right: 5px;', "Toggle "+name);
+            contents += HtmlUtils.a(getIcon(name), {alt:'Toggle '+name, href:'!cond toggle '+name, type:'button', style:'float: none; margin-right: 5px;'});
         }
-        Utils.printInfo('', 'Toggle Conditions', '', contents, {title_tag: 'h2'}, infoStyle);
+        HtmlUtils.printInfo('', 'Toggle Conditions', contents, {title_tag: 'h2', type: 'info'});
     },
     printCondition = (name) => {
         let description = getConditionDescription(name);
         if (description === undefined) return;
         let icon = getIcon(name, headerIconStyle, '30px');
-        Utils.printInfo('', name, icon, description, {title_tag: 'h2'}, infoStyle);
+        HtmlUtils.printInfo('', name, description, {icon:icon, title_tag: 'h2', type: 'info'});
     };
 
     return {
