@@ -1,26 +1,26 @@
-MarkStart('Conditions.js');
+if (typeof MarkStart !== "undefined") MarkStart('Conditions.js')
 /*
- * Version: 0.1
- * Author: Chris Davies
- * GitHun: https://github.com/slowglass/Roll20.git
- * Upload Time: UPLOAD-TIMESTAMP
- * 
- * COMMAND !cond || !conditions
- * !conditions [CONDITION] - Shows condition.
- * !conditions reset - Resets the configuration to default.
- * !conditions menu - Provides condition Menus.
- * !conditions show - Shows condition on selected token(s).
- * 
- * !conditions add [condtion(s)] - Add condition(s) to selected tokens, eg. !sm add prone paralyzed
- * !conditions remove [condtion(s)] - Remove condition(s) from selected tokens, eg. !sm remove prone paralyzed
- * !conditions toggle [condtion(s)] - Toggles condition(s) of selected tokens, eg. !sm toggle prone paralyzed
- * 
- * !conditions help - Shows help menu.
- * 
- * TODO
- * !conditions config add [name] [description]
- * !conditions config remove [name] [description]
- * !conditions export - Exports the config (with conditions).
+* Version: 0.1
+* Author: Chris Davies
+* GitHun: https://github.com/slowglass/Roll20.git
+* Upload Time: UPLOAD-TIMESTAMP
+* 
+* COMMAND !cond || !conditions
+* !conditions [CONDITION] - Shows condition.
+* !conditions reset - Resets the configuration to default.
+* !conditions menu - Provides condition Menus.
+* !conditions show - Shows condition on selected token(s).
+* 
+* !conditions add [condtion(s)] - Add condition(s) to selected tokens, eg. !sm add prone paralyzed
+* !conditions remove [condtion(s)] - Remove condition(s) from selected tokens, eg. !sm remove prone paralyzed
+* !conditions toggle [condtion(s)] - Toggles condition(s) of selected tokens, eg. !sm toggle prone paralyzed
+* 
+* !conditions help - Shows help menu.
+* 
+* TODO
+* !conditions config add [name] [description]
+* !conditions config remove [name] [description]
+* !conditions export - Exports the config (with conditions).
 */
 
 var Conditions = Conditions || (function() {
@@ -29,6 +29,7 @@ var Conditions = Conditions || (function() {
     let defaults = {};
     let config = {};
     let tokenMakers = {};
+    let prev = {};
     const version = "0.1",
     module = "cjd:Conditions",
 
@@ -108,13 +109,13 @@ var Conditions = Conditions || (function() {
                     '<p>The condition also ends if an effect removes the grappled creature from the reach of the Grappler or Grappling effect, such as when a creature is hurled away by the Thunderwave spell.</p>',
                 'Incapacitated':
                     '<p>An incapacitated creature can’t take actions or reactions.</p>',
-               'Invisibility':
+            'Invisibility':
                     '<p>An invisible creature is impossible to see without the aid of magic or a Special sense. For the purpose of Hiding, the creature is heavily obscured. '+
                     'The creature’s location can be detected by any noise it makes or any tracks it leaves.</p> <p>Attack rolls against the creature have disadvantage, and the creature’s Attack rolls have advantage.</p>',
                 'Paralyzed':
                     '<p>A paralyzed creature is <i>incapacitated</i> and can’t move or speak.</p> <p>The creature automatically fails Strength and Dexterity saving throws.</p>'+
                     '<p>Attack rolls against the creature have advantage.</p> <p>Any Attack that hits the creature is a critical hit if the attacker is within 5 feet of the creature.</p>',
-               'Petrified':
+            'Petrified':
                     '<p>A petrified creature is transformed, along with any nonmagical object it is wearing or carrying, into a solid inanimate substance (usually stone). '+
                     'Its weight increases by a factor of ten, and it ceases aging.</p>'+
                     '<p>The creature is <i>incapacitated</i>, can’t move or speak, and is unaware of its surroundings.</p>'+
@@ -155,7 +156,7 @@ var Conditions = Conditions || (function() {
                     '<p>Charmed creature regars the caster of charm as a friendly acquaintance.</p>'+
                     '<p>This spell ends if the caster or any of its companions do anything harmful to it.</p>'+
                     '<p>Once the spell ends, the creature knows that it was charmed</p>',
-               'Command':
+            'Command':
                     '<p>The commanded creature must follow the command it has been given on its next turn.</p>',
                 'Heat-Metal':
                     '<p>A piece of metal the creature is holding / wearing is hot. The caster can reapply the damage on as a bonus action</p>',
@@ -228,7 +229,6 @@ var Conditions = Conditions || (function() {
                 break;
                 
             case 'reset':
-                Utils.debug("Reset", accessGranted("config", msgData.playerid));
                 if(accessGranted("config", msgData.playerid)) 
                     config = Utils.getState(module, defaults, true);
                 break;
@@ -290,7 +290,6 @@ var Conditions = Conditions || (function() {
                 HtmlUtils.printInfo('', '', `The condition ${condition_name} is not supported.`, {type: 'info'});
                 return;
             }
-            Utils.debug("ID:", id);
             let announce = false;
             let tag = condition + "::" +id;
             tokens.forEach(token => {
@@ -348,4 +347,4 @@ on('ready', () => {
     Conditions.initialise();
     Conditions.registerEventHandlers();
 });
-MarkStop('Conditions.js');
+if (typeof MarkStop !== "undefined") MarkStop('Conditions.js')

@@ -1,10 +1,10 @@
-MarkStart('Utils.js')
+if (typeof MarkStart !== "undefined") MarkStart('Utils.js')
 /*
  * Version: 0.1
  * Author: Chris Davies
  * GitHun: https://github.com/slowglass/Roll20.git
  * Upload Time: UPLOAD-TIMESTAMP
- * 
+ *
  * Utils
  *   - announce(name, version)
 */
@@ -124,4 +124,4 @@ var HtmlUtils = HtmlUtils || (function() {
         printInfo
     }
 })();
-MarkStop('Utils.js')
+if (typeof MarkStop !== "undefined") MarkStop('Utils.js')
