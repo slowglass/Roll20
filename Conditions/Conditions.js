@@ -15,8 +15,9 @@ MarkStart('Conditions.js');
  * !conditions remove [condtion(s)] - Remove condition(s) from selected tokens, eg. !sm remove prone paralyzed
  * !conditions toggle [condtion(s)] - Toggles condition(s) of selected tokens, eg. !sm toggle prone paralyzed
  * 
- * TODO
  * !conditions help - Shows help menu.
+ * 
+ * TODO
  * !conditions config add [name] [description]
  * !conditions config remove [name] [description]
  * !conditions export - Exports the config (with conditions).
@@ -28,7 +29,6 @@ var Conditions = Conditions || (function() {
     let defaults = {};
     let config = {};
     let tokenMakers = {};
-    let prev = {};
     const version = "0.1",
     module = "cjd:Conditions",
 

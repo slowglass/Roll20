@@ -42,6 +42,7 @@ var Utils = Utils || (function() {
             return undefined;
         msgInfo.subCommand = msgInfo.args.shift();
         msgInfo.playerid = msg.playerid;
+        msgInfo.who=(getObj('player',msg.playerid)||{get:()=>'API'}).get('_displayname');
         msgInfo.tokens = [];
         if(msg.selected && msg.selected.length){
             msgInfo.tokens = msg.selected.map(s => getObj(s._type, s._id));
