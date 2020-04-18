@@ -23,13 +23,24 @@ if (typeof MarkStart !== "undefined") MarkStart('Conditions.js')
 * !conditions export - Exports the config (with conditions).
 */
 
+
+/**
+ * External API
+ * 
+ * ConditionsListener:onConditionsChange(character, flag) : return true if processed (ie Conditions need do no more)
+ * Conditions:registerListener(ConditionsListener)
+ * Conditions:hasCondition(token, name)
+ * Conditions:setCondition(token, name)
+ * Conditions:clearCondition(token, name)
+ */
 var Conditions = Conditions || (function() {
     'use strict';
-
+    const $U = Utils;
+    const $W = HtmlUtils;
     let defaults = {};
     let config = {};
     let tokenMakers = {};
-    let prev = {};
+    let listeners = {};
     const version = "0.1",
     module = "cjd:Conditions",
 
@@ -70,8 +81,8 @@ var Conditions = Conditions || (function() {
     initialise = () => {
         initMarkers();
         getDefaults();
-        config = Utils.getState(module, defaults, false);
-        Utils.announce(module, version, 'UPLOAD-TIMESTAMP');
+        config = $U.getState(module, defaults, false);
+        $U.announce(module, version, 'UPLOAD-TIMESTAMP');
     },
     registerEventHandlers = () => {
         on('chat:message', onChat);
@@ -109,13 +120,13 @@ var Conditions = Conditions || (function() {
                     '<p>The condition also ends if an effect removes the grappled creature from the reach of the Grappler or Grappling effect, such as when a creature is hurled away by the Thunderwave spell.</p>',
                 'Incapacitated':
                     '<p>An incapacitated creature can’t take actions or reactions.</p>',
-            'Invisibility':
+                'Invisibility':
                     '<p>An invisible creature is impossible to see without the aid of magic or a Special sense. For the purpose of Hiding, the creature is heavily obscured. '+
                     'The creature’s location can be detected by any noise it makes or any tracks it leaves.</p> <p>Attack rolls against the creature have disadvantage, and the creature’s Attack rolls have advantage.</p>',
                 'Paralyzed':
                     '<p>A paralyzed creature is <i>incapacitated</i> and can’t move or speak.</p> <p>The creature automatically fails Strength and Dexterity saving throws.</p>'+
                     '<p>Attack rolls against the creature have advantage.</p> <p>Any Attack that hits the creature is a critical hit if the attacker is within 5 feet of the creature.</p>',
-            'Petrified':
+                'Petrified':
                     '<p>A petrified creature is transformed, along with any nonmagical object it is wearing or carrying, into a solid inanimate substance (usually stone). '+
                     'Its weight increases by a factor of ten, and it ceases aging.</p>'+
                     '<p>The creature is <i>incapacitated</i>, can’t move or speak, and is unaware of its surroundings.</p>'+
@@ -143,6 +154,14 @@ var Conditions = Conditions || (function() {
                     '<p>The creature automatically fails Strength and Dexterity saving throws.</p>'+
                     '<p>Attack rolls against the creature have advantage.</p>'+
                     '<p>Any Attack that hits the creature is a critical hit if the attacker is within 5 feet of the creature.</p>',
+                "Concentrating":
+                    '<p>Creature is concentrating on maintaining a spell.</p>'+
+                    '<p>The following can break the creature\'s concentation:</p>'+
+                    '<ul><li>Casting another spell that requires concentration.</li>'+
+                    '<li>Whenever the creature takes damage it must make a Constitution saving throw to maintain its concentration. '+
+                    'The DC equals 10 or half the damage taken, whichever number is higher. '+
+                    'If damage is taken from multiple sources, such as an arrow and a dragon\'s breath, then separate saving throws are made for each source of damage</li>'+
+                    '<li>Being incapacitated or killed.</li></ul>',
                 // Spell Effects
                 'Vicious-Mockery':
                     '<p>Creature has disadvantage on the next Attack roll it makes before the end of its next turn</p>',
@@ -156,7 +175,7 @@ var Conditions = Conditions || (function() {
                     '<p>Charmed creature regars the caster of charm as a friendly acquaintance.</p>'+
                     '<p>This spell ends if the caster or any of its companions do anything harmful to it.</p>'+
                     '<p>Once the spell ends, the creature knows that it was charmed</p>',
-            'Command':
+                'Command':
                     '<p>The commanded creature must follow the command it has been given on its next turn.</p>',
                 'Heat-Metal':
                     '<p>A piece of metal the creature is holding / wearing is hot. The caster can reapply the damage on as a bonus action</p>',
@@ -186,11 +205,11 @@ var Conditions = Conditions || (function() {
             }
         };
     },
-    onMarkerChange = (obj, prev) => {
+    onMarkerChange = (token, prev) => {
         let prevStatusMarkers = (typeof prev.get === 'function') ? prev.get('statusmarkers') : prev.statusmarkers;
         if (typeof prev.statusmarkers !== 'string') return;
 
-        let currentStatusMarkers = obj.get('statusmarkers');
+        let currentStatusMarkers = token.get('statusmarkers');
         if (prevStatusMarkers === currentStatusMarkers) return;
 
         // Create arrays from the statusmarkers strings.
@@ -203,12 +222,23 @@ var Conditions = Conditions || (function() {
             if(!arrPrev.includes(tag)) {
                 let marker=tag.split(':')[0];
                 if (!_.has(config.markers, marker)) return;
-                printCondition(marker);
+                if (!informListeners(marker, token, true))
+                    printCondition(marker);
             }
         });
+        arrPrev.forEach(tag => {
+            if (!tag.includes("::")) return;
+            if(!arrCurrent.includes(tag)) {
+                let marker=tag.split(':')[0];
+                if (!_.has(config.markers, marker)) return;
+                if (!informListeners(marker, token, false))
+                    printCondition(marker);
+            }
+        });
+
     },
     onChat = (msg) => {
-        let msgData = Utils.parseMessage(msg, ["!cond", "!conditions"]);
+        let msgData = $U.parseMessage(msg, ["!cond", "!conditions"]);
         if (msgData === undefined) return;
         switch(msgData.subCommand)
         {
@@ -230,7 +260,7 @@ var Conditions = Conditions || (function() {
                 
             case 'reset':
                 if(accessGranted("config", msgData.playerid)) 
-                    config = Utils.getState(module, defaults, true);
+                    config = $U.getState(module, defaults, true);
                 break;
 
             default:
@@ -250,8 +280,8 @@ var Conditions = Conditions || (function() {
             '&nbsp;'];
         
 
-        let contents = HtmlUtils.ul(listItems, {listType:'list'});
-        HtmlUtils.printInfo('', 'Usage', contents, {title_tag:'h2', type: 'info'});
+        let contents = $W.ul(listItems, {listType:'list'});
+        $W.printInfo('Usage', contents, {type: 'info'});
     },
     printTokenConditions = (tokens) => {
         let contents = '';
@@ -262,55 +292,56 @@ var Conditions = Conditions || (function() {
             statusmarkers.forEach(tag => {
                 if (!tag.includes("::")) return;
                 let marker=tag.split(':')[0];
-                let anchor = HtmlUtils.a(getConditionAsName(marker), {title:'Show Condition '+marker, href:'!cond '+marker, type:"link"});
+                let anchor = $W.a(getConditionAsName(marker), {title:'Show Condition '+marker, href:'!cond '+marker, type:"link"});
                 listItems.push('<span>'+anchor+'</span> ');
             });
             let list = "<i>None</i>";
             if (listItems.length>0)
-                list = HtmlUtils.ul(listItems, {listType:'list', itemType:'listItem'});
+                list = $W.ul(listItems, {listType:'list', itemType:'listItem'});
             contents += '<b>'+token.get('name')+'</b><br></br>' + list +"<hr>";
         });
-        HtmlUtils.printInfo('', 'Conditions', contents, {title_tag:'h2', type: 'info'});
+        $W.printInfo('Conditions', contents, {type: 'info'});
+    },
+    updateCondition = (cmd, token, tag) => {
+        log(`${module}:updateCondition => tag:${tag}`)
+        let announce = false;
+        let sm = token.get('statusmarkers');
+        let statusmarkers = token.get('statusmarkers').split(",");
+        let add = (cmd === 'add') ? true : (cmd === 'toggle') ? !statusmarkers.includes(tag) : false;      
+        let marker=tag.split(':')[0];
+        if (add && !statusmarkers.includes(tag)) {
+            statusmarkers.push(tag);
+            announce = !informListeners(marker,token, true);
+        } else if (!add && statusmarkers.includes(tag)) {
+            let markerIndex = statusmarkers.indexOf(tag);
+            statusmarkers.splice(markerIndex, 1);
+            informListeners(marker,token, false);
+        } else {
+        }
+        token.set("statusmarkers", statusmarkers.join(','));
+        return announce;
     },
     updateTokenMarkers = (playerid, cmd, conditions, tokens) => {
         if(!accessGranted("updateToken", playerid)) return;
 
         if(!tokens.length) {
-            HtmlUtils.printInfo('', '', 'No tokens are selected.', {type: 'info'});
+            $W.printInfo('', 'No tokens are selected.', {type: 'info'});
             return;
         }
         if(!conditions.length) {
-            HtmlUtils.printInfo('', '', 'No condition(s) were given.', {type: 'info'});
+            $W.printInfo('', 'No condition(s) were given.', {type: 'info'});
             return;
         }
         conditions.forEach(condition => {
             let id = getConditionId(condition);
             if (id === undefined) {
                 let condition_name = getConditionAsName(condition);
-                HtmlUtils.printInfo('', '', `The condition ${condition_name} is not supported.`, {type: 'info'});
+                $W.printInfo('', `The condition ${condition_name} is not supported.`, {type: 'info'});
                 return;
             }
             let announce = false;
             let tag = condition + "::" +id;
-            tokens.forEach(token => {
-                let statusmarkers = token.get('statusmarkers').split(",");
-                let add = (cmd === 'add') ? true : (cmd === 'toggle') ? !statusmarkers.includes(tag) : false;
-                
-                if (add)
-                {
-                    if (!statusmarkers.includes(tag)) 
-                    {
-                        announce = true;
-                        statusmarkers.push(tag);
-                    }
-                }
-                else
-                {
-                    let markerIndex = statusmarkers.indexOf(tag);
-                    statusmarkers.splice(markerIndex, 1);
-                }
-                token.set("statusmarkers", statusmarkers.join(','));
-            });
+            tokens.forEach(token => { announce |= updateCondition(cmd, token, tag); });
             if (announce) printCondition(condition);
         });
     },
@@ -321,23 +352,54 @@ var Conditions = Conditions || (function() {
         for(let name in config.markers){
             if (getConditionId(name) === undefined) continue;
             let desc = config.markers[name];
-            contents += HtmlUtils.a(getIcon(name), {title:'Toggle '+getConditionAsName(name), href:'!cond toggle '+name, type:'button', style:'float: none; margin-right: 5px;'});
+            contents += $W.a(getIcon(name), {title:'Toggle '+getConditionAsName(name), href:'!cond toggle '+name, type:'button', style:'float: none; margin-right: 5px;'});
         }
-        HtmlUtils.printInfo('', 'Toggle Conditions', contents, {title_tag: 'h2', type: 'info'});
+        $W.printInfo('Toggle Conditions', contents, {type: 'info'});
     },
     printCondition = (condition) => {
+        if (getConditionId(condition) === undefined) return;
         let name = getConditionAsName(condition);
         let description = getConditionDescription(condition);
-        if (getConditionId(condition) === undefined) return;
         if (description === undefined) return;
         let icon = getIcon(condition, headerIconStyle, '30px');
-        HtmlUtils.printInfo('', name, description, {icon:icon, title_tag: 'h2', type: 'info'});
-    };
+        $W.printInfo(name, description, {icon:icon, type: 'info'});
+    },
+    registerListener = (listener, condition) => {
+        if(!_.has(listeners, condition)) listeners[condition] = [];
+        listeners[condition].push(listener);
+    },
+    informListeners = (marker, token, flag) => {
+        if(!_.has(listeners, marker))
+            return false;
+        let playersInformed = false;
+        listeners[marker].forEach(listener => { playersInformed |= listener.onConditionsChange(token, flag); });
+        return playersInformed;
+    },
+    hasCondition = (token, condition) => { 
+        let id = getConditionId(condition);
+        if (id === undefined) return false;
+        let tag = condition + "::" +id;
+        let statusmarkers = token.get('statusmarkers').split(",");
+        return statusmarkers.includes(tag);
+    },
+    changeCondition = (cmd, token, condition) => 
+    {
+        let n=token.get("name");
+        log(`${module}:changeCondition => cmd:${cmd}, token:${n}, cond:${condition}`)
+        let id = getConditionId(condition);
+        log(`${module}:changeCondition => id:${id}`)
+        if (id === undefined) return false;
+        let tag = condition + "::" +id;
+        updateCondition(cmd, token, tag);
+    }
 
     return {
         initialise,
         registerEventHandlers,
-        getVersion
+        getVersion,
+        registerListener,
+        hasCondition,
+        changeCondition
     };
 })();
 

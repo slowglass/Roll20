@@ -13,7 +13,14 @@ var Utils = Utils || (function() {
     'use strict';
     const version = "0.1",
     debugStyle = "overflow: hidden; background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;",
-    name = "cjd:Utils",
+    module = "cjd:Utils",
+    reg = (pattern, str, num, defValue) => {
+        let matches = str.match(pattern)
+        if (matches === undefined || matches[num] === undefined)
+            return defValue;
+        else
+            return matches[1];
+    },
     debug = (msg, details) => {
         let m = msg;
         if (details !== undefined) {
@@ -48,11 +55,41 @@ var Utils = Utils || (function() {
             msgInfo.tokens = msg.selected.map(s => getObj(s._type, s._id));
         }
         return msgInfo;
+    },
+    // Following functions are for 5eOGL - need to have a general way to specify a template going forward
+    // if I ever want to publish these
+    isSpellMsg = (template, content) => {
+        return  template === 'spell' && content.includes("{{concentration=1}}");
+    },
+    isSpellAttackMsg = (template, content) => {
+        return  (template === 'dmg' || template === 'atk') && content.includes('!concentration');
+    },
+    getSpellCaster = (str) => { return reg(/charname=([^\n{}]*[^"\n{}])/, str, 1, "Unknown"); },
+    getSpellName = (str) => { return reg(/name=([^\n{}]*[^"\n{}])/, str, 1, "Unknown"); },
+    parseSpell = (msg) => {
+        let spellInfo = {}
+
+        if (msg === undefined || msg.rolltemplate === undefined) 
+            return undefined;
+        if (!isSpellMsg(msg.rolltemplate, msg.content) && !isSpellAttackMsg(msg.rolltemplate, msg.content))
+            return undefined;
+            
+        debug("spellInfo", "IsSpell: "+getSpellName(msg.content));
+        spellInfo.character = getSpellCaster(msg.content);
+        spellInfo.name = getSpellName(msg.content);
+        spellInfo.playerid = msg.playerid;
+        let characterid = findObjs({ name: spellInfo.character, _type: 'character' }).shift().get('id');
+        let currentPageId = Campaign().get('playerpageid');
+        let tokens = findObjs({ represents: characterid, _type: 'graphic' });
+        spellInfo.tokens = [];
+        tokens.forEach(token => {  if (token.get("_pageid") == currentPageId) spellInfo.tokens.push(token); });
+        return spellInfo;
     };
-    announce(name, version, 'UPLOAD-TIMESTAMP');
+    announce(module, version, "UPLOAD-TIMESTAMP");
     return {
         debug,
         parseMessage,
+        parseSpell,
         getState,
         announce
     };
@@ -107,17 +144,16 @@ var HtmlUtils = HtmlUtils || (function() {
     },
     h = (text) => {
         if (text === '') return '';
-        let tag = get('title_tag', 'div');
+        let tag = get('title_tag', 'h2');
         let icon = get('icon');
         if (icon === '')
             return `<${tag} style="margin-bottom: 10px;">${text}</${tag}>`;
         else
         return   `<${tag} style="margin-bottom: 10px;">${icon}<span style="vertical-align: top;">${text}</span></${tag}>`;
     },
-    printInfo = (module, title, text, settings) => {
+    printInfo = (title, text, settings) => {
         currentSettings = settings;
-        let heading = h(title);
-        sendChat(module, '<div '+style()+'>'+heading+text+'</div>', null, {noarchive:true});
+        sendChat(get('module', 'Info'), '<div '+style()+'>'+h(title)+text+'</div>', null, {noarchive:true});
     };
     return {
         a, ul, h,
