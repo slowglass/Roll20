@@ -66,15 +66,14 @@ var Utils = Utils || (function() {
     },
     getSpellCaster = (str) => { return reg(/charname=([^\n{}]*[^"\n{}])/, str, 1, "Unknown"); },
     getSpellName = (str) => { return reg(/name=([^\n{}]*[^"\n{}])/, str, 1, "Unknown"); },
-    parseSpell = (msg) => {
-        let spellInfo = {}
-
+    parseSpell = (msg, spellList) => {
+        let spellInfo = {};
         if (msg === undefined || msg.rolltemplate === undefined) 
             return undefined;
-        if (!isSpellMsg(msg.rolltemplate, msg.content) && !isSpellAttackMsg(msg.rolltemplate, msg.content))
+        spellInfo.name = getSpellName(msg.content);
+        if (!spellList.includes(spellInfo.name) && !isSpellMsg(msg.rolltemplate, msg.content) && !isSpellAttackMsg(msg.rolltemplate, msg.content))
             return undefined;
-            
-        debug("spellInfo", "IsSpell: "+getSpellName(msg.content));
+
         spellInfo.character = getSpellCaster(msg.content);
         spellInfo.name = getSpellName(msg.content);
         spellInfo.playerid = msg.playerid;
