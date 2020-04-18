@@ -1,4 +1,21 @@
 if (typeof MarkStart !== "undefined") MarkStart('Concentration.js')
+/*
+* Version: 0.1
+* Author: Chris Davies
+* GitHun: https://github.com/slowglass/Roll20.git
+* Upload Time: UPLOAD-TIMESTAMP
+* 
+* COMMAND !concentration
+* !concentration damaged - Shows condition.
+* !concentration set - Resets the configuration to default.
+* !concentration clear - Provides condition Menus.
+* !concentration reset - Provides condition Menus.
+*
+* 
+* TODO
+* !concentration help - Shop help information
+*/
+
 var Concentration = Concentration || (function() {
     'use strict';
     const $U = Utils;
@@ -40,11 +57,19 @@ var Concentration = Concentration || (function() {
                 clearTokens(msgData.playerid, msgData.tokens);
                 break;
 
+            case 'reset':
+                config = $U.getState(module, defaults, true);
+                break;
+
             case 'help':
             default:
                 printHelpInfo();
                 break;
         }
+    },
+    printHelpInfo = () => {
+        let message = "Help Message";
+        $W.printInfo('', message, {type: 'info'});
     },
     setTokens = (playerid, tokens, spellName) => {
         tokens.forEach(token => addConcentration(playerid, token, spellName));
