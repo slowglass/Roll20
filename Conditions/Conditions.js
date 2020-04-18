@@ -96,7 +96,7 @@ var Conditions = Conditions || (function() {
             tokenMakers[e.name] = { id: e.id, url: e.url};
         });
     },
-    getDefaults = (reset) => {
+    getDefaults = () => {
         defaults = {
             config: {
                 access: "All",
