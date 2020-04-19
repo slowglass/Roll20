@@ -23,6 +23,7 @@ var Concentration = Concentration || (function() {
 
     let defaults = {};
     let config = {};
+    let spells = [];
     const version = "0.1",
     module = "cjd:Concentration",
     getVersion = () => { return version; },
@@ -35,7 +36,7 @@ var Concentration = Concentration || (function() {
     setCondition = (token) => { Conditions.changeCondition("add", token, "Concentrating"); }, 
     clearCondition = (token) => { Conditions.changeCondition("remove", token, "Concentrating"); }, 
     onChat = (msg) => {
-        let spellData = $U.parseSpell(msg, defaults.spells);
+        let spellData = $U.parseSpell(msg, spells);
         if (spellData !== undefined) {
             spellCast(spellData);
             return;
@@ -118,7 +119,7 @@ var Concentration = Concentration || (function() {
         printConcentrationMsg(token.get("name"), false, was_concentrating, undefined);
     },
     spellCast = (spellInfo) => {
-        if (spellInfo.character === undefined || spellInfo.tokens === []) return;
+        if (spellInfo.character === undefined || spellInfo.tokens.length === 0) return;
         if (spellInfo.name === undefined || spellInfo.playerid === undefined) return;
 
         spellInfo.tokens.forEach(token => {
@@ -142,9 +143,27 @@ var Concentration = Concentration || (function() {
             requestRoll(token, prev[bar] - token.get(bar));
         }
     },
+    checkAllSpells = () => {
+        spells = [];
+        let m = new Map();
+        getAllObjs().forEach((obj) => {
+            let name = obj.get("name");
+            let val = obj.get("current");
+            if (name === undefined) return;
+            if (!name.startsWith("repeating_spell-")) return;
+            let [ rep, slot, id, attr ] = name.split('_');
+            let [ t , num ] = slot.split('-');
+
+            let key = `${id}-${num}`;
+            if (!m.has(key)) m.set(key, new Map());
+            m.get(key).set(attr, val);
+        });
+        m.forEach(v => { if (v.get("spellconcentration") === "{{concentration=1}}") spells.push(v.get("spellname")); });
+    },
     initialise = () => {
         getDefaults();
         config = $U.getState(module, defaults, false);
+        checkAllSpells();
         $U.announce(module, version, 'UPLOAD-TIMESTAMP');
     },
     registerEventHandlers = () => {
@@ -152,26 +171,7 @@ var Concentration = Concentration || (function() {
         on('change:graphic:bar'+config.bar+'_value', onBarChange);
         Conditions.registerListener(Concentration, "Concentrating");
     },
-    getDefaults = (reset) => {
-        defaults = {
-            bar: 1,
-            spells: []
-        };
-        // Cantrips;
-        let s = 'Create Bonfire,Dancing Lights,Friends,Guidance,Resistance,True Strike';
-        // Level 1 (Bard / Wizard / Paladin)
-        s += ',Bane,Bless,Cause Fear, Compelled Duel,Detect Evil and Good,Detect Magic,Detect Poison and Disease';
-        s += ',Divine Favour,Expeditious Retreat,Faerie Fire,Fog Cloud,Heroism,Protection from Evil and Good,Searing Smite';
-        s += ',Shield of Faith,Silent Image,Tasha\'s Hideous Laughter,Thunderous Smite,Witch Bolt,Wrathful Smite';
-
-        // Level 2 (Bard)
-        s += ',Calm Emotions,Cloud of Daggers,Crown of Madness,Detect Thoughts,Enhance Ability,Heat Metal,Hold Person,Invisibility';
-        s += ',Locate Object,Phantasmal Force,Silence,Skywrite,Warding Wind';
-        // Level 3 (Bard)
-        s += ',Bestor Curse,Clairvoyance,Enemies Abound,Fear,Hypnotic Pattern,Major Image,Stinking Cloud';
-        defaults.spells = s.split(',');
-        
-    };
+    getDefaults = () => { defaults = { bar: 1 }; };
     return {
         initialise,
         registerEventHandlers,
