@@ -5,51 +5,44 @@ if (typeof MarkStart !== "undefined") MarkStart('Center.js')
 * GitHun: https://github.com/slowglass/Roll20.git
 * Upload Time: UPLOAD-TIMESTAMP
 * 
-* COMMAND !centre
-* !centre reset - Provides condition Menus.
-*
-* 
-* TODO
 */
 var Center = Center || (function() {
     'use strict';
     const $U = Utils;
-    const $W = HtmlUtils;
 
     let defaults = {};
     let config = {};
     const version = "0.1",
     module = "cjd:Center",
     getVersion = () => { return version; },
-    onChat = (msg) => {
-        let msgData = $U.parseMessage(msg, ["!centre", "!center"]);
-        if (msgData === undefined) return;
-        switch(msgData.subCommand)
-        {
-            case 'reset':
-                config = $U.getState(module, defaults, true);
-                break;
-
-            default:
-                printHelpInfo();
-                break;
-        }
+    pingPlayers = () => {
+        let currentPageID = Campaign().get('playerpageid');
+        var players = findObjs({ _type:"player" });
+        players.forEach(p => {
+            let pid = p.get("_id");
+            let tokens = filterObjs((obj) => {
+                if (obj.get("_subtype") !== "token") return false;
+                if (obj.get("_pageid") !== currentPageID) return false;
+                let character = getObj("character", obj.get("represents"));
+                if (character === undefined) return false;
+                let controlledby = character.get("controlledby");
+                if (controlledby === undefined || controlledby === 'all') return false;
+                return controlledby.split(',').includes(pid);
+            });
+            if (tokens === undefined || tokens.length == 0)
+                tokens = findObjs({ _subtype:"token", _pageid: currentPageID, name: 'Party' });
+            if (tokens === undefined || tokens.length == 0) return;
+            let token = tokens[0];
+            sendPing(token.get("left"),token.get("top"),token.get("pageid"),"",true, pid);
+        });
     },
-    printHelpInfo = () => {
-        let message = "Help Message";
-        $W.printInfo('', message, {type: 'info'});
-    },
+    onNewPage = () => { setTimeout(() => { pingPlayers(); }, 1500);},
     initialise = () => {
-        getDefaults();
-        config = $U.getState(module, defaults, false);
         $U.announce(module, version, 'UPLOAD-TIMESTAMP');
     },
     registerEventHandlers = () => {
-        on('chat:message', onChat);
+        on('change:campaign:playerpageid', onNewPage);
     },
-    getDefaults = () => {
-        defaults = {};   
-    };
     return {
         initialise,
         registerEventHandlers,
