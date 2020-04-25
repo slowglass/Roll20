@@ -50,7 +50,6 @@ var Conditions = Conditions || (function() {
     getConditionDescription = (name) => {
         if(!_.has(tokenMakers, name))
             return "Condition is not supported";
-
         let ret = config.markers[name];
         return ret!==undefined ? ret : "Condition has no description";
     },
@@ -82,6 +81,8 @@ var Conditions = Conditions || (function() {
         initMarkers();
         getDefaults();
         config = $U.getState(module, defaults, false);
+        // Currently no way to save config so lets always reset
+        $U.getState(module, defaults, true);
         $U.announce(module, version, 'UPLOAD-TIMESTAMP');
     },
     registerEventHandlers = () => {
@@ -163,20 +164,23 @@ var Conditions = Conditions || (function() {
                     'If damage is taken from multiple sources, such as an arrow and a dragon\'s breath, then separate saving throws are made for each source of damage</li>'+
                     '<li>Being incapacitated or killed.</li></ul>',
                 // Spell Effects
-                'Vicious-Mockery':
-                    '<p>Creature has disadvantage on the next Attack roll it makes before the end of its next turn</p>',
+
                 'Inspiration':
                     'Bardic Inspiration grants the creature a die (d6) that it can use on '+
                     '<b>one</b> ability check, attack roll, saving throw, weapon damage roll it makes. '+
                     'It can also use the die to add to it AC agaist on attack',
                 'Bane':
                     '<p>Whenever creature makes an attack roll or a saving throw while under the <b>Bane</b> effect, the creature must roll a d4 and subtract the number rolled from the attack roll or saving throw.</p>',
+                'Bless':
+                    '<>p>Whenever creature makes an attack roll or a saving throw while blessed, it can roll a d4 and add the number rolled to the attack roll or saving throw.</p>',
                 'Charm':
                     '<p>Charmed creature regars the caster of charm as a friendly acquaintance.</p>'+
                     '<p>This spell ends if the caster or any of its companions do anything harmful to it.</p>'+
                     '<p>Once the spell ends, the creature knows that it was charmed</p>',
                 'Command':
                     '<p>The commanded creature must follow the command it has been given on its next turn.</p>',
+                'Faerie-Fire':
+                    '<p>Creature is outlined in blue, green, or violet light. While outlined in light any attack roll against the creature or object has advantage if the attacker can see it, and the creature can’t benefit from being invisible.',
                 'Heat-Metal':
                     '<p>A piece of metal the creature is holding / wearing is hot. The caster can reapply the damage on as a bonus action</p>',
                 'Mage-Hand':
@@ -184,6 +188,12 @@ var Conditions = Conditions || (function() {
                     'The hand vanishes if it is ever more than 30 feet away from you or if you cast this spell again.</p><p>You can use your action to control the hand. '+
                     'You can use the hand to manipulate an object, open an unlocked door or container, stow or retrieve an item from an open container, or pour the contents out of a vial. '+
                     'You can move the hand up to 30 feet each time you use it.</p><p>The hand can’t attack, activate magic items, or carry more than 10 pounds.</p>',
+                'Mirror-Image':
+                    '<p>There are a number of illusory duplicates of the creature around and about it.</p>'+
+                    '<p>Each time the creature is attacked, there is a equal chance the attack hits one of the duplicates.</p>'+
+                    '<p>The AC if the duplicate is the creatures AC + its Dex modifier.<p>'+
+                    '<p>If hit, the duplicate disappears.</p>'+
+                    '<p>a creature is unaffected by this spell if it can’t see, if it relies on senses other than sight, such as blindsight, or if it can perceive illusions as false, as with truesight.',
                 'Sanctuary':
                     '<p>Any creature who targets the warded creature with an attack or a harmful spell must first make a Wisdom saving throw. '+
                     'On a failed save, the creature must choose a new target or lose the attack or spell. '+
@@ -193,15 +203,18 @@ var Conditions = Conditions || (function() {
                     '<p>Creature adds its Charisma bonus at all attack rolls that it makes. '+
                     'Its weapon is surrounded in flashes of lightning, emitting bright light in a 20-foot radius and a dim light 20 feet beyond that. '+
                     'The creature\'s weapon is magical while this effect lasts.</p>',
+                'Sleep':
+                    'Creature gains +2 bonus to AC while Shield of Faith is in effect.',
                 'Protection-from-Good-and-Evil':
-                        '<p>Protected creature is protected against certain types of creatures: aberrations, celestials, elementals, fey, fiends, and undead.</p>' +
-                        '<p>The protection grants several benefits. Creatures of those types have disadvantage on attack rolls against the protected creature. ' +
-                        'The protected creature also can\'t be charmed, frightened, or possessed by them. '+
-                        'If the protected creature is already charmed, frightened, or possessed by such a creature, the protected creature has advantage on any new saving throw against the relevant effect.</p>',
+                    '<p>Protected creature is protected against certain types of creatures: aberrations, celestials, elementals, fey, fiends, and undead.</p>' +
+                    '<p>The protection grants several benefits. Creatures of those types have disadvantage on attack rolls against the protected creature. ' +
+                    'The protected creature also can\'t be charmed, frightened, or possessed by them. '+
+                    'If the protected creature is already charmed, frightened, or possessed by such a creature, the protected creature has advantage on any new saving throw against the relevant effect.</p>',
                 'Shield-of-Faith':
                     'Creature gains +2 bonus to AC while Shield of Faith is in effect.',
-                'Sleep':
-                    'Creature gains +2 bonus to AC while Shield of Faith is in effect.'
+                'Vicious-Mockery':
+                    '<p>Creature has disadvantage on the next Attack roll it makes before the end of its next turn</p>'
+
             }
         };
     },
@@ -303,7 +316,6 @@ var Conditions = Conditions || (function() {
         $W.printInfo('Conditions', contents, {type: 'info'});
     },
     updateCondition = (cmd, token, tag) => {
-        log(`${module}:updateCondition => tag:${tag}`)
         let announce = false;
         let sm = token.get('statusmarkers');
         let statusmarkers = token.get('statusmarkers').split(",");
@@ -350,7 +362,10 @@ var Conditions = Conditions || (function() {
 
         let contents = '';
         for(let name in config.markers){
-            if (getConditionId(name) === undefined) continue;
+            if (getConditionId(name) === undefined) {
+                log("Missing Condition: "+name);
+                continue;
+            }
             let desc = config.markers[name];
             contents += $W.a(getIcon(name), {title:'Toggle '+getConditionAsName(name), href:'!cond toggle '+name, type:'button', style:'float: none; margin-right: 5px;'});
         }
@@ -385,9 +400,7 @@ var Conditions = Conditions || (function() {
     changeCondition = (cmd, token, condition) => 
     {
         let n=token.get("name");
-        log(`${module}:changeCondition => cmd:${cmd}, token:${n}, cond:${condition}`)
         let id = getConditionId(condition);
-        log(`${module}:changeCondition => id:${id}`)
         if (id === undefined) return false;
         let tag = condition + "::" +id;
         updateCondition(cmd, token, tag);
