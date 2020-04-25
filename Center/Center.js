@@ -42,7 +42,7 @@ var Center = Center || (function() {
     },
     registerEventHandlers = () => {
         on('change:campaign:playerpageid', onNewPage);
-    },
+    };
     return {
         initialise,
         registerEventHandlers,
