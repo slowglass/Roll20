@@ -16,11 +16,12 @@ var Utils = Utils || (function() {
     module = "cjd:Utils",
     reg = (pattern, str, num, defValue) => {
         let matches = str.match(pattern)
-        if (matches === undefined || matches[num] === undefined)
+        if (matches === undefined || matches === null || matches[num] === undefined)
             return defValue;
         else
             return matches[1];
     },
+    llog = (m) => { m.split('\n').forEach(l => log(l)); }, 
     debug = (msg, details) => {
         let m = msg;
         if (details !== undefined) {
@@ -61,34 +62,70 @@ var Utils = Utils || (function() {
     isSpellMsg = (template, content) => {
         return  template === 'spell' && content.includes("{{concentration=1}}");
     },
-    isSpellAttackMsg = (template, content) => {
-        return  (template === 'dmg' || template === 'atk') && content.includes('!concentration');
+    isAttackMsg = (template) => {
+        return  (template === 'dmg' || template === 'atk' || template === 'npcatk');
     },
-    getSpellCaster = (str) => { return reg(/charname=([^\n{}]*[^"\n{}])/, str, 1, "Unknown"); },
-    getSpellName = (str) => { return reg(/name=([^\n{}]*[^"\n{}])/, str, 1, "Unknown"); },
+    isSaveMsg = (template, content) => {
+        if (template === 'simple' && content.includes('-save-u}}}')) return true;
+        if (template === 'npc' && content.includes('-save}}}')) return true;
+        return false;
+    },
+    getCharacterName = (str) => { 
+        let name = reg(/charname=([^\n{}]*[^"\n{}])/, str, 1, undefined);
+        if (name === undefined)
+            name = reg(/{{name=([^\n{}]*[^"\n{}])/, str, 1, "Unknown");
+        return name;
+    },
+    getSpellName = (str) => { return str === undefined ? "Unknown" : reg(/name=([^\n{}]*[^"\n{}])/, str, 1, "Unknown"); },
     parseSpell = (msg, spellList) => {
         let spellInfo = {};
         if (msg === undefined || msg.rolltemplate === undefined) 
             return undefined;
         spellInfo.name = getSpellName(msg.content);
-        if (!spellList.includes(spellInfo.name) && !isSpellMsg(msg.rolltemplate, msg.content) && !isSpellAttackMsg(msg.rolltemplate, msg.content))
+        if (!spellList.includes(spellInfo.name) && !isSpellMsg(msg.rolltemplate, msg.content))
             return undefined;
 
-        spellInfo.character = getSpellCaster(msg.content);
+        spellInfo.character = getCharacterName(msg.content);
         spellInfo.name = getSpellName(msg.content);
         spellInfo.playerid = msg.playerid;
         let characterid = findObjs({ name: spellInfo.character, _type: 'character' }).shift().get('id');
         let currentPageId = Campaign().get('playerpageid');
-        let tokens = findObjs({ represents: characterid, _type: 'graphic' });
-        spellInfo.tokens = [];
-        tokens.forEach(token => {  if (token.get("_pageid") == currentPageId) spellInfo.tokens.push(token); });
+        spellInfo.tokens = findObjs({ represents: characterid, _type: 'graphic',  _pageid: currentPageId });
+        spellInfo.who = msg.who;
         return spellInfo;
+    },
+    parseSave = (msg) => {
+        let saveInfo = {};
+        if (msg === undefined || msg.rolltemplate === undefined || !isSaveMsg(msg.rolltemplate, msg.content)) 
+            return undefined;
+        saveInfo.character = getCharacterName(msg.content);
+        saveInfo.playerid = msg.playerid;
+        let characterid = findObjs({ name: saveInfo.character, _type: 'character' }).shift().get('id');
+        let currentPageId = Campaign().get('playerpageid');
+        saveInfo.tokens = findObjs({ represents: characterid, _type: 'graphic', _pageid: currentPageId  });
+        saveInfo.who = msg.who;
+        return saveInfo;
+    },
+    parseAttack = (msg) => {
+        let attackInfo = {};
+        if (msg === undefined || msg.rolltemplate === undefined || !isAttackMsg(msg.rolltemplate)) 
+            return undefined;
+
+        attackInfo.character = getCharacterName(msg.content);
+        attackInfo.playerid = msg.playerid;
+        let characterid = findObjs({ name: attackInfo.character, _type: 'character' }).shift().get('id');
+        let currentPageId = Campaign().get('playerpageid');
+        attackInfo.tokens = findObjs({ represents: characterid, _type: 'graphic', _pageid: currentPageId  });
+        attackInfo.who = msg.who;
+        return attackInfo;
     };
     announce(module, version, "UPLOAD-TIMESTAMP");
     return {
         debug,
         parseMessage,
         parseSpell,
+        parseSave,
+        parseAttack,
         getState,
         announce
     };
@@ -152,7 +189,7 @@ var HtmlUtils = HtmlUtils || (function() {
     },
     printInfo = (title, text, settings) => {
         currentSettings = settings;
-        sendChat(get('module', 'Info'), '<div '+style()+'>'+h(title)+text+'</div>', null, {noarchive:true});
+        sendChat(get('who', 'Info'), '<div '+style()+'>'+h(title)+text+'</div>', null, {noarchive:true});
     };
     return {
         a, ul, h,
