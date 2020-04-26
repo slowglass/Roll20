@@ -28,8 +28,7 @@ var Concentration = Concentration || (function() {
     module = "cjd:Concentration",
     getVersion = () => { return version; },
 
-
-    onConditionsChange = (token, flag) => {
+    onConditionsChange = (/* token, flag */) => {
         return true;
     },
     hasCondition = (token) => { return Conditions.hasCondition(token, "Concentrating"); }, 
@@ -78,14 +77,14 @@ var Concentration = Concentration || (function() {
     clearTokens = (playerid, tokens) => {
         tokens.forEach(token => removeConcentration(playerid, token));
     },
-    requestRolls = (tokens, damage) => {
-        tokens.forEach(token => {
+    requestRolls = (playerid, tokens, damage) => {
+        tokens.forEach((token) => {
             if (!hasAccess(playerid, token)) return;
             requestRoll(token, damage);
         });
     },
     controlsObj = (playerid, obj) => {
-        return character && 
+        return obj && 
             (obj.get('controlledby').split(',').includes(playerid) || 
             obj.get('controlledby').split(',').includes('all'));
     },
@@ -122,8 +121,7 @@ var Concentration = Concentration || (function() {
         if (spellInfo.character === undefined || spellInfo.tokens.length === 0) return;
         if (spellInfo.name === undefined || spellInfo.playerid === undefined) return;
 
-        spellInfo.tokens.forEach(token => {
-            let n=token.get("name");
+        spellInfo.tokens.forEach((token) => {
             let was_concentrating = hasCondition(token);
             setCondition(token);
             printConcentrationMsg(spellInfo.character, true, was_concentrating, spellInfo.name);
@@ -151,14 +149,14 @@ var Concentration = Concentration || (function() {
             let val = obj.get("current");
             if (name === undefined) return;
             if (!name.startsWith("repeating_spell-")) return;
-            let [ rep, slot, id, attr ] = name.split('_');
-            let [ t , num ] = slot.split('-');
+            let [, slot, id, attr] = name.split('_');
+            let [, num] = slot.split('-');
 
             let key = `${id}-${num}`;
             if (!m.has(key)) m.set(key, new Map());
             m.get(key).set(attr, val);
         });
-        m.forEach(v => { if (v.get("spellconcentration") === "{{concentration=1}}") spells.push(v.get("spellname")); });
+        m.forEach((v) => { if (v.get("spellconcentration") === "{{concentration=1}}") spells.push(v.get("spellname")); });
     },
     initialise = () => {
         getDefaults();
@@ -176,14 +174,14 @@ var Concentration = Concentration || (function() {
         initialise,
         registerEventHandlers,
         getVersion,
-        onConditionsChange, // ConcentrationListener
+        onConditionsChange /*ConcentrationListener*/,
     }
 })();
 
-on('ready',function() {
+on('ready',() => {
     'use strict';
 
     Concentration.initialise();
     Concentration.registerEventHandlers();
 });
-if (typeof MarkStart !== "undefined") MarkStart('Concentration.js')
+if (typeof MarkStart !== "undefined") MarkStop('Concentration.js')

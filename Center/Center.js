@@ -9,16 +9,15 @@ if (typeof MarkStart !== "undefined") MarkStart('Center.js')
 var Center = Center || (function() {
     'use strict';
     const $U = Utils;
-
-    let defaults = {};
-    let config = {};
+    //let defaults = {};
+    //let config = {};
     const version = "0.1",
     module = "cjd:Center",
     getVersion = () => { return version; },
     pingPlayers = () => {
         let currentPageID = Campaign().get('playerpageid');
         var players = findObjs({ _type:"player" });
-        players.forEach(p => {
+        players.forEach((p) => {
             let pid = p.get("_id");
             let tokens = filterObjs((obj) => {
                 if (obj.get("_subtype") !== "token") return false;
@@ -29,10 +28,10 @@ var Center = Center || (function() {
                 if (controlledby === undefined || controlledby === 'all') return false;
                 return controlledby.split(',').includes(pid);
             });
-            if (tokens === undefined || tokens.length == 0)
+            if (tokens === undefined || tokens.length === 0)
                 tokens = findObjs({ _subtype:"token", _pageid: currentPageID, name: 'Party' });
-            if (tokens === undefined || tokens.length == 0) return;
-            let token = tokens[0];
+            if (tokens === undefined || tokens.length === 0) return;
+            let token = tokens.shift();
             sendPing(token.get("left"),token.get("top"),token.get("pageid"),"",true, pid);
         });
     },
@@ -50,10 +49,10 @@ var Center = Center || (function() {
     }
 })();
 
-on('ready',function() {
+on('ready',() => {
     'use strict';
 
     Center.initialise();
     Center.registerEventHandlers();
 });
-if (typeof MarkStart !== "undefined") MarkStart('Concentration.js')
+if (typeof MarkStart !== "undefined") MarkStop('Center.js')

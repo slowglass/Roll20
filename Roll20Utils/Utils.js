@@ -6,7 +6,7 @@ if (typeof MarkStart !== "undefined") MarkStart('Utils.js')
  * Upload Time: UPLOAD-TIMESTAMP
  *
  * Utils
- *   - announce(name, version)
+ *   - announce(name, version
 */
 
 var Utils = Utils || (function() {
@@ -21,7 +21,6 @@ var Utils = Utils || (function() {
         else
             return matches[1];
     },
-    llog = (m) => { m.split('\n').forEach(l => log(l)); }, 
     debug = (msg, details) => {
         let m = msg;
         if (details !== undefined) {
@@ -135,7 +134,7 @@ var HtmlUtils = HtmlUtils || (function() {
     'use strict';
     let currentSettings = {};
     const version = "0.1",
-    name = "cjd:Utils",
+    module = "cjd:Utils",
     styles = {
         link: "background-color: #fff; padding: 5px; color: #000; text-align: center;",
         button: "background-color: #000; border: 1px solid #292929; border-radius: 3px; padding: 5px; color: #fff; text-align: center; float: right;",
@@ -191,6 +190,7 @@ var HtmlUtils = HtmlUtils || (function() {
         currentSettings = settings;
         sendChat(get('who', 'Info'), '<div '+style()+'>'+h(title)+text+'</div>', null, {noarchive:true});
     };
+    Utils.announce(module, version, "UPLOAD-TIMESTAMP");
     return {
         a, ul, h,
         printInfo

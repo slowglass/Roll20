@@ -100,10 +100,11 @@ var Conditions = Conditions || (function() {
     },
     initMarkers = () => { 
         let markers = JSON.parse(Campaign().get("token_markers"));
-        markers.forEach(e =>{
+        markers.forEach((e) => {
             tokenMakers[e.name] = { id: e.id, url: e.url};
         });
     },
+    /*eslint object-curly-newline: "off"*/
     getDefaults = () => {
         defaults = {
             config: {
@@ -121,14 +122,6 @@ var Conditions = Conditions || (function() {
                 'Deafened': {
                     type:'Cond', desc: '<p>A deafened creature can’t hear and automatically fails any ability check that requires hearing.</p>'},
                 'Frightened': {
-                    type:'Cond', desc: '<p>A frightened creature has disadvantage on Ability Checks and Attack rolls while the source of its fear is within line of sight.</p>'+
-                    '<p>The creature can’t willingly move closer to the source of its fear.</p>'},
-                'Grappled': {
-                    type:'Cond', desc: '<p>A grappled creature’s speed becomes 0, and it can’t benefit from any bonus to its speed.</p> <p>The condition ends if the Grappler is <i>incapacitated</i>.</p>'+
-                    '<p>The condition also ends if an effect removes the grappled creature from the reach of the Grappler or Grappling effect, such as when a creature is hurled away by the Thunderwave spell.</p>'},
-                'Incapacitated': {
-                    type:'Cond', desc: '<p>An incapacitated creature can’t take actions or reactions.</p>'},
-                'Invisibility': {
                     type:'Cond', desc: '<p>An invisible creature is impossible to see without the aid of magic or a Special sense. For the purpose of Hiding, the creature is heavily obscured. '+
                     'The creature’s location can be detected by any noise it makes or any tracks it leaves.</p> <p>Attack rolls against the creature have disadvantage, and the creature’s Attack rolls have advantage.</p>'},
                 'Paralyzed': {
@@ -221,7 +214,6 @@ var Conditions = Conditions || (function() {
                     type:'Spell', desc: '<p>Creature gains +2 bonus to AC while Shield of Faith is in effect.</p>'},
                 'Vicious-Mockery': {
                     type:'Spell', desc: '<p>Creature has disadvantage on the next Attack roll it makes before the end of its next turn</p>'}
-
             }
         };
     },
@@ -237,7 +229,7 @@ var Conditions = Conditions || (function() {
         let arrCurrent = currentStatusMarkers.split(",");
 
         // Loop through the statusmarkers array.
-        arrCurrent.forEach(tag => {
+        arrCurrent.forEach((tag) => {
             if (!tag.includes("::")) return;
             if(!arrPrev.includes(tag)) {
                 let marker=tag.split(':')[0];
@@ -246,7 +238,7 @@ var Conditions = Conditions || (function() {
                     printCondition(marker);
             }
         });
-        arrPrev.forEach(tag => {
+        arrPrev.forEach((tag) => {
             if (!tag.includes("::")) return;
             if(!arrCurrent.includes(tag)) {
                 let marker=tag.split(':')[0];
@@ -297,7 +289,8 @@ var Conditions = Conditions || (function() {
             '<span style="text-decoration: underline">!cond toggle [CONDITIONS]</span> - Toggles the given condition(s) on the selected token(s).',
             '<span style="text-decoration: underline">!cond remove [CONDITIONS]</span> - Removes the given condition(s) from the selected token(s).',
             '<span style="text-decoration: underline">!cond show [CONDITIONS]</span> - Show the current condition(s) from the selected token(s).',
-            '&nbsp;'];
+            '&nbsp;'
+        ];
         
 
         let contents = $W.ul(listItems, {listType:'list'});
@@ -306,10 +299,10 @@ var Conditions = Conditions || (function() {
     printTokenConditions = (tokens) => {
         let contents = '';
         tokens.forEach((token) => {
-            if ('token' !== token.get("_subtype")) return;
+            if (token.get("_subtype") !== 'token') return;
             let statusmarkers = getStatusMarkers(token);
             let listItems = [];
-            statusmarkers.forEach(tag => {
+            statusmarkers.forEach((tag) => {
                 if (!tag.includes("::")) return;
                 let marker=tag.split(':')[0];
                 let anchor = $W.a(getConditionAsName(marker), {title:'Show Condition '+marker, href:'!cond '+marker, type:"link"});
@@ -324,7 +317,6 @@ var Conditions = Conditions || (function() {
     },
     updateCondition = (cmd, token, tag) => {
         let announce = false;
-        let sm = token.get('statusmarkers');
         let statusmarkers = token.get('statusmarkers').split(",");
         let add = (cmd === 'add') ? true : (cmd === 'toggle') ? !statusmarkers.includes(tag) : false;      
         let marker=tag.split(':')[0];
@@ -335,8 +327,7 @@ var Conditions = Conditions || (function() {
             let markerIndex = statusmarkers.indexOf(tag);
             statusmarkers.splice(markerIndex, 1);
             informListeners(marker,token, false);
-        } else {
-        }
+        } 
         token.set("statusmarkers", statusmarkers.join(','));
         return announce;
     },
@@ -351,7 +342,7 @@ var Conditions = Conditions || (function() {
             $W.printInfo('', 'No condition(s) were given.', {type: 'info'});
             return;
         }
-        conditions.forEach(condition => {
+        conditions.forEach((condition) => {
             let id = getConditionId(condition);
             if (id === undefined) {
                 let condition_name = getConditionAsName(condition);
@@ -360,7 +351,7 @@ var Conditions = Conditions || (function() {
             }
             let announce = false;
             let tag = condition + "::" +id;
-            tokens.forEach(token => { announce |= updateCondition(cmd, token, tag); });
+            tokens.forEach((token) => { announce = announce || updateCondition(cmd, token, tag); });
             if (announce) printCondition(condition);
         });
     },
@@ -370,7 +361,7 @@ var Conditions = Conditions || (function() {
         let contents = '';
         contents='<div><b>Conditions:</b><br />';
         
-        getMarkerNames("Cond").forEach(name=>{
+        getMarkerNames("Cond").forEach((name) => {
             if (getConditionId(name) === undefined) {
                 log("Missing Condition: "+name);
                 return;
@@ -379,7 +370,7 @@ var Conditions = Conditions || (function() {
         });
         contents+='</div>';
         contents+='<div><b>Spells:</b><br />';
-        getMarkerNames("Spell").forEach(name=>{
+        getMarkerNames("Spell").forEach((name) => {
                     if (getConditionId(name) === undefined) {
                         log("Missing Condition: "+name);
                         return;
@@ -395,7 +386,7 @@ var Conditions = Conditions || (function() {
         let description = getConditionDescription(condition);
         if (description === undefined) return;
         let icon = getIcon(condition, headerIconStyle, '30px');
-        $W.printInfo(name, description, {icon:icon, type: 'info'});
+        $W.printInfo(name, description, {icon, type: 'info'});
     },
     registerListener = (listener, condition) => {
         if(!_.has(listeners, condition)) listeners[condition] = [];
@@ -405,7 +396,7 @@ var Conditions = Conditions || (function() {
         if(!_.has(listeners, marker))
             return false;
         let playersInformed = false;
-        listeners[marker].forEach(listener => { playersInformed |= listener.onConditionsChange(token, flag); });
+        listeners[marker].forEach((listener) => { playersInformed = playersInformed || listener.onConditionsChange(token, flag); });
         return playersInformed;
     },
     hasCondition = (token, condition) => { 
@@ -416,11 +407,11 @@ var Conditions = Conditions || (function() {
         return statusmarkers.includes(tag);
     },
     changeCondition = (cmd, token, condition) => {
-        let n=token.get("name");
         let id = getConditionId(condition);
         if (id === undefined) return false;
         let tag = condition + "::" +id;
         updateCondition(cmd, token, tag);
+        return true;
     }
 
     return {
