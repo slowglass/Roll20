@@ -14,6 +14,7 @@ var Utils = Utils || (function() {
     const version = "0.1",
     debugStyle = "overflow: hidden; background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;",
     module = "cjd:Utils",
+    clone = obj => JSON.parse(JSON.stringify(obj)),
     reg = (pattern, str, num, defValue) => {
         let matches = str.match(pattern)
         if (matches === undefined || matches === null || matches[num] === undefined)
@@ -57,15 +58,6 @@ var Utils = Utils || (function() {
         }
         return token_or_id;
     },
-    controlledByPlayer = (token_or_id, playerId, allowAll) => {
-        let token = getToken(token_or_id);
-        let character = getObj("character", token.get("represents"));
-        if (character === undefined) return false;
-        let controlledby = character.get("controlledby");
-        if (allowAll && controlledby === 'all') return true;
-        if (controlledby === undefined || controlledby === 'all' || controlledby === '') return false;
-        return controlledby.split(',').includes(playerId);
-    },
     getRoll20Property = (token_or_id, key, fallback) => {
         let t = getToken(token_or_id);
         if (t === undefined) return fallback;
@@ -77,6 +69,15 @@ var Utils = Utils || (function() {
             v = t.get(key);
         }
         return v === undefined ? fallback : v;
+    },
+    controlledByPlayer = (token_or_id, playerId, allowAll) => {
+        let charId = getRoll20Property(token_or_id, 'represents');
+        let character = getObj("character", charId);
+        if (character === undefined) return false;
+        let controlledby = character.get("controlledby");
+        if (allowAll && controlledby === 'all') return true;
+        if (controlledby === undefined || controlledby === 'all' || controlledby === '') return false;
+        return controlledby.split(',').includes(playerId);
     },
     // Following functions are for 5eOGL - need to have a general way to specify a template going forward
     // if I ever want to publish these
@@ -166,11 +167,12 @@ var Utils = Utils || (function() {
       players[id] = {char, name};
       return true;
     },
-    getPlayerId = (field, value) => _.find(players, p => p[field] === value),
-    getPlayer = (playerId) => {
-      if (!_.has(players, playerId))
-        return false;
-      return players[playerId].char;
+    getPlayerId = (field, value) =>  Object.keys(players).find(key => players[key][field] === value),
+    getPlayer = (playerId, field) => {
+      let key = field === undefined ? 'char' : field
+      let p = players[playerId]
+      if (p === undefined) return "Who Knows";
+      return p[key];
     };
     addPlayer('-LjLzcTIT87gkT7sYzKZ', "Woffler", "Paul");
     addPlayer('-LjX5QHohZ33sOLQlwyg', "Gunnhildr", "Vicki");
@@ -178,6 +180,7 @@ var Utils = Utils || (function() {
     addPlayer('-M32vYnIVoH6qsGsK1aQ', "Kildare", "William");
     announce(module, version, "UPLOAD-TIMESTAMP");
     return {
+        clone,
         getPlayer,
         getPlayerId,
         controlledByPlayer,
