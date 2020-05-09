@@ -75,8 +75,8 @@ var Conditions = Conditions || (function() {
 
         let iconStyle = 'width: '+size+'; height: '+size+';';
         iconStyle += 'background-size: '+size+' '+size+';';
-        iconStyle += 'background-image: url('+url+');'
-        iconStyle += 'background-repeat: no-repeat;'
+        iconStyle += 'background-image: url('+url+');';
+        iconStyle += 'background-repeat: no-repeat;';
         iconStyle += style;
 
         return '<div style="'+iconStyle+'">'+'</div>';
@@ -302,18 +302,24 @@ var Conditions = Conditions || (function() {
         let contents = $W.ul(listItems, {listType:'list'});
         $W.printInfo('Usage', contents, {type: 'info'});
     },
+    getTokenConditions = (token) => {
+        let listItems = [];
+        if (token === undefined) return listItems;
+        if (token.get("_subtype") !== 'token') return listItems;
+        let statusmarkers = getStatusMarkers(token);
+        statusmarkers.forEach((tag) => {
+            if (!tag.includes("::")) return;
+            let marker=tag.split(':')[0];
+            let anchor = $W.a(getConditionAsName(marker), {title:'Show Condition '+marker, href:'!cond '+marker, type:"link"});
+            listItems.push('<span>'+anchor+'</span> ');
+        });
+        return listItems;
+    },
     printTokenConditions = (tokens) => {
         let contents = '';
         tokens.forEach((token) => {
             if (token.get("_subtype") !== 'token') return;
-            let statusmarkers = getStatusMarkers(token);
-            let listItems = [];
-            statusmarkers.forEach((tag) => {
-                if (!tag.includes("::")) return;
-                let marker=tag.split(':')[0];
-                let anchor = $W.a(getConditionAsName(marker), {title:'Show Condition '+marker, href:'!cond '+marker, type:"link"});
-                listItems.push('<span>'+anchor+'</span> ');
-            });
+            let listItems = getTokenConditions(token);
             let list = "<i>None</i>";
             if (listItems.length>0)
                 list = $W.ul(listItems, {listType:'list', itemType:'listItem'});
@@ -426,6 +432,7 @@ var Conditions = Conditions || (function() {
         getVersion,
         registerListener,
         hasCondition,
+        getTokenConditions,
         changeCondition
     };
 })();

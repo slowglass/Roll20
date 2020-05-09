@@ -29,7 +29,11 @@ var TurnTracker = TurnTracker || (function () {
     'use strict';
     const
         version = "0.1",
-        module = "cjd:TurnTracker";
+        module = "cjd:TurnTracker",
+        uiSettings = { who: 'Next Turn', type:'info', title_tag: 'h3', targets: []},
+        headerIconStyle = 'margin-right: 5px; margin-top: 5px; display: inline-block; float: left;',
+        buttonStyle = 'margin-right: 1px; margin-top: 1px; display: inline-block;',
+        nextUrl = 'https://s3.amazonaws.com/files.d20.io/images/132700410/wqxZjz4l3dqjHPSfElyOxg/max.png?1589025398';
     const
         $U = Utils,
         $W = HtmlUtils;
@@ -93,6 +97,7 @@ var TurnTracker = TurnTracker || (function () {
             url = 'https://s3.amazonaws.com/files.d20.io/images/132476156/BAEaLoC9w-5PM77BN61GPw/thumb.png?1588974077',
             update = (token) => {
                 let state = TTTTokens.getState(token);
+                if (state.duration === 1001) return true;
                 state.duration -= 1;
                 if (state.duration < 0) {
                     token.remove();
@@ -101,14 +106,15 @@ var TurnTracker = TurnTracker || (function () {
                 }
                 token.set('name', `${state.name} : ${state.duration} rounds remaining`);
                 TTTTokens.setState(token, state);
-                return true;},
-            create = (name) => {
-                let state = {type, duration: 10 + 1, name};
+                return true;
+            },
+            create = (name, d, hidden) => {
+                let layer = hidden ? 'gmlayer' : 'objects';
+                let state = {type, duration: parseInt(d, 10) + 1, name};
                 let token = createObj('graphic', {
-                    name,
+                    name, layer,
                     imgsrc: url,
                     pageid: Campaign().get("playerpageid"),
-                    layer: 'objects',
                     left: -120, top: -120, height: 70, width: 70
                 });
                 TTTTokens.setState(token, state);
@@ -116,12 +122,6 @@ var TurnTracker = TurnTracker || (function () {
                 return token.get('_id');
             }
         return { type, create, update };
-    })();
-    const TTT_Trigger = (() => {
-        const
-            type = 'Trigger',
-            update = () => { /**/ };
-        return { type, update };
     })();
     const TTTTokens = (() => {
         const
@@ -140,7 +140,6 @@ var TurnTracker = TurnTracker || (function () {
                 let state = getState(token_or_id);
                 switch (state.type) {
                     case TTT_Marker.type: return TTT_Marker.update(token);
-                    //case TTT_Trigger.type: return TTT_Trigger.update(token);
                     case TTT_Cond.type: return TTT_Cond.update(token);
                     default: return true;
                 }
@@ -179,35 +178,39 @@ var TurnTracker = TurnTracker || (function () {
 
             return '<div style="'+iconStyle+'">'+'</div>';
         },
+        getConditions = (id) => {
+            let conditions = '';
+            if (Conditions !== undefined) {
+                let token = $U.getToken(id);
+                let items = Conditions.getTokenConditions(token);
+                if (items.length > 0) {
+                    conditions = "Conditions: ";
+                    items.forEach((item, idx) => {
+                        if (idx !== 0) conditions += ", ";
+                        conditions += item;
+                    });
+                }
+            }
+            return conditions;
+        },
         combatStart = () => {
-            let who = 'Next Turn';
-            let type = 'info';
-            let title_tag = 'h3';
-            let headerIconStyle = 'margin-right: 5px; margin-top: 5px; display: inline-block; float: left;';
-            let buttonStyle = 'margin-right: 1px; margin-top: 1px; display: inline-block;';
-            let nextUrl = 'https://s3.amazonaws.com/files.d20.io/images/132700410/wqxZjz4l3dqjHPSfElyOxg/max.png?1589025398';
             let imgurl = TTT_Marker.url;
             let name = "Start Combat";
-            let icon = getIcon(imgurl, headerIconStyle, '45px');
+            let settings = $U.clone(uiSettings);
+            settings.who = 'Next Turn';
+            settings.icon = getIcon(imgurl, headerIconStyle, '45px');
             let button = $W.a(getIcon(nextUrl, buttonStyle, '30px'), {href:'!tt next', type:'button', style:'float: right; '});
-            let targets = [];
-            $W.printInfo(name, `Combat is about to start${button}`, {who, title_tag, targets, icon, type});
+            $W.printInfo(name, `Combat is about to start${button}`, settings);
         },
         announce = (id) => {
-            let who = 'Next Turn';
-            let type = 'info';
-            let title_tag = 'h3';
-            let conditions = "";
-            let headerIconStyle = 'margin-right: 5px; margin-top: 5px; display: inline-block; float: left;';
-            let buttonStyle = 'margin-right: 1px; margin-top: 1px; display: inline-block;';
-            let nextUrl = 'https://s3.amazonaws.com/files.d20.io/images/132700410/wqxZjz4l3dqjHPSfElyOxg/max.png?1589025398';
+            let settings = $U.clone(uiSettings);
+            let conditions = getConditions(id);
             let imgurl = $U.getRoll20Property(id, "imgsrc");
             let name = $U.getRoll20Property(id, "short_name");
-            let icon = getIcon(imgurl, headerIconStyle, '45px');
+            settings.icon = getIcon(imgurl, headerIconStyle, '45px');
             let button = $W.a(getIcon(nextUrl, buttonStyle, '30px'), {href:'!tt next', type:'button', style:'float: right; '});
-            let targets = [];
-            if (isHidden(id)) targets = ['gm'];
-            $W.printInfo(name, `It is now your turn<br>${conditions}${button}`, {who, title_tag, targets, icon, type});
+            if (isHidden(id)) settings.targets = ['gm'];
+            $W.printInfo(name, `It is now your turn<br>${conditions}${button}`, settings);
         },
         processTurnTracker = () => {
             let startTicket = getCurrentTicket();
@@ -220,7 +223,7 @@ var TurnTracker = TurnTracker || (function () {
                 if (startTicket.id === ticket.id)
                     break;
             }
-            announce(ticket.id);
+            ping();
         },
         moveToNextPlayer = (playerid) => {
             let startTicket = getCurrentTicket();
@@ -239,19 +242,25 @@ var TurnTracker = TurnTracker || (function () {
             TTTTokens.removeAll();
             TTEntries.set([]);
         },
-        add = () => {
+        add = (args) => {
+            let name = args[0] === undefined ? "Knotted Handkerchief" : args[0];
+            let duration = args[1] === undefined ? 1000 : args[1];
+            let hidden = args[2] === undefined ? false : args[2] === 'hidden';
             let pageid = Campaign().get("playerpageid");
             let ticket = TTEntries.get().shift();
             let pr = ticket === undefined ? 0.005 : parseInt(ticket.pr, 10) + 0.005;
-            let id = TTT_Cond.create('Bane');
+            let id = TTT_Cond.create(name, duration, hidden);
             TTEntries.add({ pageid, id, pr });
         },
         ping = () => {
-            let orderItem = getCurrentTicket();
-            if (orderItem === undefined) return;
-            var token = getObj('graphic', orderItem.id);
+            let ticket = getCurrentTicket();
+            if (ticket === undefined) return;
+            announce(ticket.id);
+            var token = $U.getToken(ticket.id);
             if (token === undefined) return;
-            sendPing(token.get('left'), token.get('top'), token.get('pageid'));
+            if (!isHidden(token))
+              sendPing(token.get('left'), token.get('top'), token.get('pageid'));
+
         },
         onTurnOrder = (obj, prev) => {
             let current = TTEntries.get();
@@ -274,7 +283,7 @@ var TurnTracker = TurnTracker || (function () {
                     moveToNextPlayer(msgData.playerid);
                     break;
                 case 'add':
-                    add();
+                    add(msgData.args);
                     break;
                 case 'ping-target':
                     ping();
