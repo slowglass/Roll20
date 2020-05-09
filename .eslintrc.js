@@ -11,6 +11,7 @@ module.exports = {
         "Utils": "readonly",
         "HtmlUtils": "readonly",
         "Conditions": "readonly",
+        "createObj": "readonly",
         "getObj": "readonly",
         "getAllObjs": "readonly",
         "filterObjs": "readonly",
