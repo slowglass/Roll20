@@ -4,19 +4,19 @@ if (typeof MarkStart !== "undefined") MarkStart('Conditions.js')
 * Author: Chris Davies
 * GitHun: https://github.com/slowglass/Roll20.git
 * Upload Time: UPLOAD-TIMESTAMP
-* 
+*
 * COMMAND !cond || !conditions
 * !conditions [CONDITION] - Shows condition.
 * !conditions reset - Resets the configuration to default.
 * !conditions menu - Provides condition Menus.
 * !conditions show - Shows condition on selected token(s).
-* 
+*
 * !conditions add [condtion(s)] - Add condition(s) to selected tokens, eg. !sm add prone paralyzed
 * !conditions remove [condtion(s)] - Remove condition(s) from selected tokens, eg. !sm remove prone paralyzed
 * !conditions toggle [condtion(s)] - Toggles condition(s) of selected tokens, eg. !sm toggle prone paralyzed
-* 
+*
 * !conditions help - Shows help menu.
-* 
+*
 * TODO
 * !conditions config add [name] [description]
 * !conditions config remove [name] [description]
@@ -26,7 +26,7 @@ if (typeof MarkStart !== "undefined") MarkStart('Conditions.js')
 
 /**
  * External API
- * 
+ *
  * ConditionsListener:onConditionsChange(character, flag) : return true if processed (ie Conditions need do no more)
  * Conditions:registerListener(ConditionsListener)
  * Conditions:hasCondition(token, name)
@@ -98,7 +98,7 @@ var Conditions = Conditions || (function() {
 
         // Handle condition descriptions when other APIs changing the statusmarkers on a token?
     },
-    initMarkers = () => { 
+    initMarkers = () => {
         let markers = JSON.parse(Campaign().get("token_markers"));
         markers.forEach((e) => {
             tokenMakers[e.name] = { id: e.id, url: e.url};
@@ -163,7 +163,13 @@ var Conditions = Conditions || (function() {
                     'The DC equals 10 or half the damage taken, whichever number is higher. '+
                     'If damage is taken from multiple sources, such as an arrow and a dragon\'s breath, then separate saving throws are made for each source of damage</li>'+
                     '<li>Being incapacitated or killed.</li></ul>'},
-
+                // States
+                'Bandaged': {
+                    type:'State', desc: '<p>Creature has been healed using a bandage. It cannot be healed again using a bandage until it has had a short rest</p>'},
+                'Torch': {
+                    type:'State', desc: '<p>Creature is carrying a visible torch.</p>'},
+                'Lantern': {
+                    type:'State', desc: '<p>Creature is carrying a visible lantern.</p>'},
                 // Spell Effects
                 'Inspiration': {
                     type:'Spell', desc: '<p>Bardic Inspiration grants the creature a die (d6) that it can use on '+
@@ -269,9 +275,9 @@ var Conditions = Conditions || (function() {
             case 'menu':
                 printConditionMenu(msgData.playerid);
                 break;
-                
+
             case 'reset':
-                if(accessGranted("config", msgData.playerid)) 
+                if(accessGranted("config", msgData.playerid))
                     config = $U.getState(module, defaults, true);
                 break;
 
@@ -291,7 +297,7 @@ var Conditions = Conditions || (function() {
             '<span style="text-decoration: underline">!cond show [CONDITIONS]</span> - Show the current condition(s) from the selected token(s).',
             '&nbsp;'
         ];
-        
+
 
         let contents = $W.ul(listItems, {listType:'list'});
         $W.printInfo('Usage', contents, {type: 'info'});
@@ -318,7 +324,7 @@ var Conditions = Conditions || (function() {
     updateCondition = (cmd, token, tag) => {
         let announce = false;
         let statusmarkers = token.get('statusmarkers').split(",");
-        let add = (cmd === 'add') ? true : (cmd === 'toggle') ? !statusmarkers.includes(tag) : false;      
+        let add = (cmd === 'add') ? true : (cmd === 'toggle') ? !statusmarkers.includes(tag) : false;
         let marker=tag.split(':')[0];
         if (add && !statusmarkers.includes(tag)) {
             statusmarkers.push(tag);
@@ -327,7 +333,7 @@ var Conditions = Conditions || (function() {
             let markerIndex = statusmarkers.indexOf(tag);
             statusmarkers.splice(markerIndex, 1);
             informListeners(marker,token, false);
-        } 
+        }
         token.set("statusmarkers", statusmarkers.join(','));
         return announce;
     },
@@ -360,7 +366,7 @@ var Conditions = Conditions || (function() {
 
         let contents = '';
         contents='<div><b>Conditions:</b><br />';
-        
+
         getMarkerNames("Cond").forEach((name) => {
             if (getConditionId(name) === undefined) {
                 log("Missing Condition: "+name);
@@ -399,7 +405,7 @@ var Conditions = Conditions || (function() {
         listeners[marker].forEach((listener) => { playersInformed = playersInformed || listener.onConditionsChange(token, flag); });
         return playersInformed;
     },
-    hasCondition = (token, condition) => { 
+    hasCondition = (token, condition) => {
         let id = getConditionId(condition);
         if (id === undefined) return false;
         let tag = condition + "::" +id;
@@ -425,7 +431,7 @@ var Conditions = Conditions || (function() {
 })();
 
 
-on('ready', () => { 
+on('ready', () => {
     'use strict';
     Conditions.initialise();
     Conditions.registerEventHandlers();
