@@ -4,7 +4,7 @@ if (typeof MarkStart !== "undefined") MarkStart('Center.js')
 * Author: Chris Davies
 * GitHun: https://github.com/slowglass/Roll20.git
 * Upload Time: UPLOAD-TIMESTAMP
-* 
+*
 */
 var Center = Center || (function() {
     'use strict';
@@ -19,14 +19,15 @@ var Center = Center || (function() {
         var players = findObjs({ _type:"player" });
         players.forEach((p) => {
             let pid = p.get("_id");
+            let isGM = playerIsGM(pid);
             let tokens = filterObjs((obj) => {
                 if (obj.get("_subtype") !== "token") return false;
                 if (obj.get("_pageid") !== currentPageID) return false;
                 let character = getObj("character", obj.get("represents"));
                 if (character === undefined) return false;
                 let controlledby = character.get("controlledby");
-                if (controlledby === undefined || controlledby === 'all') return false;
-                return controlledby.split(',').includes(pid);
+                if (controlledby === undefined || controlledby === 'all' || controlledby === '') return false;
+                return isGM || controlledby.split(',').includes(pid);
             });
             if (tokens === undefined || tokens.length === 0)
                 tokens = findObjs({ _subtype:"token", _pageid: currentPageID, name: 'Party' });
