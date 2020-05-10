@@ -37,7 +37,7 @@ var Birthday = Birthday || (function () {
           let settings = $U.clone(uiSettings);
           let charId = $U.getRoll20Property(token, 'represents');
           let character = getObj("character", charId);
-          if (character === undefined) return fail( `Char ${charId}: ` + $U.getRoll20Property(token, 'name', 'UNKNOWN'));
+          if (character === undefined) return fail(`Char ${charId}: ` + $U.getRoll20Property(token, 'name', 'UNKNOWN'));
           let controlledby = character.get("controlledby");
           let p = $U.getPlayerId('name', 'Paul');
           let w = $U.getPlayerId('name', 'William');

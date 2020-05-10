@@ -151,7 +151,8 @@ var TurnTracker = TurnTracker || (function () {
             };
         return { is, getState, setState, update, removeAll };
     })();
-    let marker = undefined;
+  
+    let marker = undefined;  // eslint-disable-line no-undef-init
     const
         getVersion = () => version,
         getCurrentTicket = () => TTEntries.get().shift(),
