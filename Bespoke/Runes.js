@@ -54,8 +54,6 @@ var Runes = Runes || (function() {
               return;
              obj.get('notes', (note) => { runes[name].details=note; });
              runes[name].url = obj.get('imgsrc');
-             log(JSON.stringify(obj));
-            log("Add desc for:"+name);
         });
     },
     canInvesitigate = (name, playerid) => {
@@ -123,6 +121,7 @@ var Runes = Runes || (function() {
         let woffler=$U.getPlayerId('char', 'Siri');
         let grunhildr=$U.getPlayerId('char', 'Gunnhildr');
         let kildare=$U.getPlayerId('char', 'Kildare');
+        //let test=$U.getPlayerId('char', 'Test1');
         $U.announce(module, version, 'UPLOAD-TIMESTAMP');
         runes = {
           'Algiz': {s:'Protection'},

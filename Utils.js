@@ -178,6 +178,7 @@ var Utils = Utils || (function() {
     addPlayer('-LjX5QHohZ33sOLQlwyg', "Gunnhildr", "Vicki");
     addPlayer('-LmU19KlCSzGgZu9iGsF', "Siri", "Judith");
     addPlayer('-M32vYnIVoH6qsGsK1aQ', "Kildare", "William");
+    addPlayer('-M6Kne-ndHPgoS6ImUJd', "Test1", "Test1");
     announce(module, version, "UPLOAD-TIMESTAMP");
     return {
         clone,
