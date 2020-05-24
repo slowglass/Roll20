@@ -10,6 +10,7 @@ module.exports = {
         "Campaign": "readonly",
         "Utils": "readonly",
         "HtmlUtils": "readonly",
+        "HandoutConfig": "readonly",
         "Conditions": "readonly",
         "createObj": "readonly",
         "getObj": "readonly",
