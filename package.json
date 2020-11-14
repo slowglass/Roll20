@@ -4,8 +4,8 @@
   "description": "Roll20 Modules that work with the Roll 20 API",
   "main": "roll20.js",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "make": "tsc -p tsconfig.json",
+    "build": "tsc -p .",
+    "watch": "tsc -p . -w",
     "lint": "tslint -p . || exit 0",
     "test": "echo \"Error: no test specified\""
   },
@@ -15,6 +15,7 @@
   },
   "keywords": [
     "Roll20",
+    "D&D",
     "Typescript"
   ],
   "author": "Christopher.James.Davies",
@@ -26,5 +27,6 @@
   "devDependencies": {
     "tslint": "^6.1.3",
     "typescript": "^4.0.5"
-  }
+  },
+  "dependencies": {}
 }
