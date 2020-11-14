@@ -11,7 +11,7 @@ type Layer = 'gmlayer' | 'objects' | 'map' | 'walls';
 /**
  * Roll20 objects are a special kind of JavaScript object. They represent something in your campaign, such as a token on the tabletop or a character in the journal, and there is some special consideration for using them.
  */
-interface Roll20Object {
+interface Roll20ObjectCore {
   /**
    * This field is shorthand for obj.get('id'). All Roll20 objects have a _id property which uniquely identifies them within a campaign, but their properties are not directly accessible. Normally you have to call get in order to get the value of a property, but because _id is needed on such a frequent basis, this shim field is provided for convenience.
    */
@@ -23,7 +23,7 @@ interface Roll20Object {
   remove(): void;
 }
 
-interface Roll20ObjectBase<TImmutableSynchronousGetProperties, TImmutableAsynchronousGetProperties, TMutableSynchronousGetProperties, TMutableAsynchronousGetProperties> extends Roll20Object {
+interface Roll20ObjectBase<TImmutableSynchronousGetProperties, TImmutableAsynchronousGetProperties, TMutableSynchronousGetProperties, TMutableAsynchronousGetProperties> extends Roll20ObjectCore {
   /**
    * Gets the value of a specified property.
    *
@@ -88,6 +88,9 @@ interface Roll20ObjectBaseProperties {
   readonly _id: string;
   readonly _type: ObjectType;
 }
+
+
+interface Roll20Object extends Roll20ObjectBase<Roll20ObjectBaseProperties, never, never, never> {}
 
 interface CampaignImmutableSynchronousGetProperties extends Roll20ObjectBaseProperties {
   readonly _type: 'campaign';
@@ -429,7 +432,7 @@ declare function createObj(type: 'handout', properties: HandoutCreationPropertie
  * @param properties A collection of key:value pairs to match with Roll20 objects in the campaign.
  * @param options If options.caseInsensitive is true, string comparisons between Roll20 objects and properties will be case-insensitive.
  */
-declare function findObjs(properties: { [property: string]: any }, options?: FindObjectOptions): Roll20Object[];
+declare function findObjs(properties: { [property: string]: any }, options?: FindObjectOptions): Roll20ObjectCore[];
 
 /**
  * Will execute the provided callback funtion on each object, and if the callback returns true, the object will be included in the result array.
@@ -439,7 +442,7 @@ declare function filterObjs(callback: (obj: Roll20Object) => boolean): Roll20Obj
 /**
  * Returns an array of all the objects in the Game (all types). Equivalent to calling filterObjs and just returning true for every object.
  */
-declare function getAllObjs(): Roll20Object[];
+declare function getAllObjs(): Roll20ObjectCore[];
 
 /**
  * Gets a specific Roll20 object.
@@ -495,7 +498,8 @@ declare function on(event: 'ready', callback: () => void): void;
 declare function on(event: 'chat:message', callback: (msg: ChatEventData) => void): void;
 declare function on(event: 'change:campaign:turnorder', callback: (obj: Campaign, prev: CampaignImmutableSynchronousGetProperties & CampaignMutableSynchronousGetProperties) => void): void;
 declare function on(event: 'change:character', callback: (obj: Character, prev: OldCharacter) => void): void;
-
+// tslint:disable-next-line:unified-signatures
+declare function on(event: 'change:campaign:playerpageid', callback: () => void): void;
 /**
  * Sends a chat message.
  *
@@ -512,3 +516,7 @@ declare function sendChat(speakingAs: string, message: string, callback?: ((oper
 declare function Campaign(): Campaign;
 
 declare function randomInteger(max: number): number;
+
+declare function playerIsGM(playerid:string):boolean
+
+declare function sendPing(left:number, top:number, pageid:string, playerid?:string, moveAll?:boolean, visibleTo?:string):void

@@ -25,6 +25,17 @@ class MessageSender {
         else
             return   `<${tag} style="margin-bottom: 10px;">${icon}<span style="vertical-align: top;">${text}</span></${tag}>`;
     }
+    attr(name:string):string {
+        let txt = '';
+        if (undefined !== this.currentSettings[name])
+            txt+=this.currentSettings[name];
+        if (txt !== '') return `${name}='${txt}'`;
+        else return txt;
+    }
+    anchor(text:string, settings:any):string {
+        this.currentSettings = settings;
+        return '<a '+ this.style() + this.attr('href')  + this.attr('title') +  '>' + text + '</a>';
+    }
     style(prefix:string=""):string {
         const typeKey= (prefix==='') ? 'type' : `${prefix}Type`;
         const styleKey= (prefix==='') ? 'style' : `${prefix}Style`;
@@ -47,8 +58,14 @@ class MessageSender {
         const speakingAs = this.get('who', 'Info')
         const msg = '<div '+this.style()+'>'+this.header(title)+text+'</div>';
         if (this.currentSettings.targets === undefined || this.currentSettings.targets.length === 0)
+            this.sendChat('', speakingAs, msg);
+        else
+            this.currentSettings.targets.forEach((target:string) => this.sendChat(target, speakingAs, msg));
+    }
+    sendChat(target:string, speakingAs:string, msg:string) {
+        if (target === '')
             sendChat(speakingAs, msg, null, {noarchive:true});
         else
-            this.currentSettings.targets.forEach((target: string) => sendChat(speakingAs, `/w ${target} ${msg}`, null, {noarchive:true}));
+            sendChat(speakingAs, `/w ${target} ${msg}`, null, {noarchive:true})
     }
 }

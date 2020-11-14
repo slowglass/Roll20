@@ -4,15 +4,14 @@
 */
 
 
-declare var $U : any;
-
+function debug(m:string, o:any) {
+    log(m+":"+JSON.stringify(o))
+}
 abstract class APIModule {
     abstract version: string
-    abstract module: string
     protected abstract initialise() : void
-
     register() {
-        $U.announce(this.module, this.version);
+        log(`Register Module: ${this.constructor.name} (${this.version})`)
         this.initialise()
     }
 }

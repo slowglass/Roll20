@@ -82,7 +82,7 @@ class ChatParser {
     msg(msg: ChatEventData, commands: string[]) : MessageInfo  {
         const msgInfo = new MessageInfo()
         const args = msg.content.split(' ');
-        let command = msgInfo.args.shift();
+        let command = args.shift()
         if (command === undefined) command = ""
         if (commands.includes(command)) {
             const playerid = msg.playerid;
