@@ -13,6 +13,7 @@
     "removeComments": true,
     "sourceMap": false,
     "strict": true,
+    "lib": ["es6", "dom", "es2017"],
     "target": "es6",
     "watch": false,
   },
