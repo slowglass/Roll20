@@ -10,7 +10,7 @@
     "experimentalDecorators": true,
     "noUnusedLocals": false,
     "noUnusedParameters": true,
-    "removeComments": true,
+    "removeComments": false,
     "sourceMap": false,
     "strict": true,
     "lib": ["es6", "dom", "es2017"],

@@ -45,7 +45,6 @@ class Conditions extends APIModule {
     private listeners:Map<string,ConditionsListener[]> = new Map<string,ConditionsListener[]>()
     parser:ChatParser = new ChatParser()
     printer:MessageSender = new MessageSender()
-    defaults:any
     config:any
     markers:Map<string,MarkerInfo> = new Map<string,MarkerInfo>()
     tokenMakers:Map<string,TokenMarkerInfo> = new Map<string,TokenMarkerInfo>()
@@ -74,15 +73,16 @@ class Conditions extends APIModule {
     }
     private getIcon(name:string, style:string='', size:string='24px'):string {
         const tokenMarker = this.tokenMakers.get(name)
+        debug(name, tokenMarker)
         if (tokenMarker === undefined) return ''
         if (tokenMarker.url === undefined) return ''
 
         let iconStyle = `width: ${size}; height: ${size};`
         iconStyle += `background-size: ${size} ${size};`
-        iconStyle += `background-image: url(${tokenMarker.url})`
+        iconStyle += `background-image: url(${tokenMarker.url});`
         iconStyle += `background-repeat: no-repeat;`
         iconStyle += style;
-
+        debug(name, iconStyle)
         return '<div style="'+iconStyle+'">'+'</div>';
     }
     // @ts-ignore
@@ -97,9 +97,13 @@ class Conditions extends APIModule {
         });
     }
     private getDefaults():void {
-        this.defaults = {
-            config: {/* yaml:Conditions.config.yaml */},
-        };
+        this.config = {/* yaml:./src/Conditions.config.yaml */}
+        const m:any = {/* yaml:./src/Conditions.markers.yaml */}
+        for(const p in m) {
+            if (m.hasOwnProperty(p)) {
+                this.markers.set(p, {type: m[p].type, desc: m[p].desc})
+            }
+        }
     }
     private onMarkerChange(token:Graphic, prev:any) {
         const prevStatusMarkers = (typeof prev.get === 'function') ? prev.get('statusmarkers') : prev.statusmarkers;
@@ -174,6 +178,7 @@ class Conditions extends APIModule {
             '<span style="text-decoration: underline">!cond toggle [CONDITIONS]</span> - Toggles the given condition(s) on the selected token(s).',
             '<span style="text-decoration: underline">!cond remove [CONDITIONS]</span> - Removes the given condition(s) from the selected token(s).',
             '<span style="text-decoration: underline">!cond show [CONDITIONS]</span> - Show the current condition(s) from the selected token(s).',
+            '<span style="text-decoration: underline">!cond menu</span> - Show menu that makes toggling conditions on selected token(s) easier.',
             '&nbsp;'
         ];
         const contents = this.printer.list(listItems, {listType:'list'});
@@ -252,9 +257,9 @@ class Conditions extends APIModule {
     }
     private printConditionSubMenu(title:string, type:string):string {
         let contents =`<div><b>${title}:</b><br />`
-        this.markers.forEach((v,k) => {
+        this.markers.forEach((v,name) => {
             if (v.type !== type) return
-            if (this.getConditionId(k) === undefined) return
+            if (this.getConditionId(name) === undefined) return
             contents += this.printer.anchor(this.getIcon(name), {title:'Toggle '+Conditions.getConditionAsName(name), href:'!cond toggle '+name, type:'button', style:'float: none; margin-right: 5px;'});
         })
         contents+='</div>'

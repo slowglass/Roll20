@@ -45,7 +45,8 @@ class Game:
 
 class ConfigInserter:
     def processNext(self, data):
-        prefix = "{/* yaml:"
+        print(f'   Processing YAML Include')
+        prefix = "{ /* yaml:"
         postfix = "*/}"
         start = data.find(prefix)
         if (start==-1):
@@ -54,11 +55,13 @@ class ConfigInserter:
         if (end==-1):
             return (False, data)
         file_name=data[start+len(prefix):end]
+        print(f'   Processing YAML ${file_name}')
         file = open(file_name.strip(), "r")
         encoded_yaml = json.dumps(yaml.safe_load(file.read()))
         return (True, data.replace(data[start:end+len(postfix)], encoded_yaml))
 
     def read(self, path):
+        print(f'   Processing File {path}')
         with open(path, 'r') as file:
             data = file.read()
         more = True
