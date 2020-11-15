@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "allowJs": false,
+    "allowJs": true,
     "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "build",

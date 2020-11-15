@@ -71,8 +71,3 @@ class Notes extends APIModule {
         on('chat:message', (msg) => this.onChat(msg));
     }
 }
-
-on('ready', () => {
-    const notes = new Notes();
-    notes.register();
-})

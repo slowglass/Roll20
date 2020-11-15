@@ -443,7 +443,7 @@ declare function filterObjs(callback: (obj: Roll20Object) => boolean): Roll20Obj
 /**
  * Returns an array of all the objects in the Game (all types). Equivalent to calling filterObjs and just returning true for every object.
  */
-declare function getAllObjs(): Roll20ObjectCore[];
+declare function getAllObjs(): Roll20Object[];
 
 /**
  * Gets a specific Roll20 object.
@@ -473,6 +473,8 @@ declare function getAttrByName(character_id: string, attribute_name: string, val
  */
 declare function log(message: any): void;
 
+
+type GraphicChangeBarValue = ('change:graphic:bar1_value'|'change:graphic:bar2_value'|'change:graphic:bar3_value')
 /**
  * Registers an event handler.
  *
@@ -501,6 +503,8 @@ declare function on(event: 'change:campaign:turnorder', callback: (obj: Campaign
 declare function on(event: 'change:character', callback: (obj: Character, prev: OldCharacter) => void): void;
 // tslint:disable-next-line:unified-signatures
 declare function on(event: 'change:campaign:playerpageid', callback: () => void): void;
+// tslint:disable-next-line:unified-signatures
+declare function on(event: GraphicChangeBarValue, callback: (obj: Graphic, prev: any) => void): void;
 // tslint:disable-next-line:unified-signatures
 declare function on(event: 'change:graphic:statusmarkers', callback: (obj: Graphic, prev: any) => void): void;
 /**

@@ -14,7 +14,7 @@ class Center extends APIModule {
         players.forEach((p) => {
             const pid = p.get("_id");
             const isGM = playerIsGM(pid);
-            let tokens = Roll20.filterGraphics((obj: Roll20Object) => {
+            let tokens = Roll20.filterGraphics((obj: Graphic) => {
                 if (obj.get("_subtype") !== "token") return false;
                 if (obj.get("_pageid") !== currentPageID) return false;
                 const character = getObj("character", obj.get("represents"));
@@ -43,7 +43,3 @@ class Center extends APIModule {
     }
 }
 
-on('ready', () => {
-    const center = new Center();
-    center.register();
-})

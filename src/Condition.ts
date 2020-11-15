@@ -131,8 +131,7 @@ class Conditions extends APIModule {
             if(!arrCurrent.includes(tag)) {
                 const marker=tag.split(':')[0];
                 if (!this.markers.has(marker)) return;
-                if (!this.informListeners(marker, token, false))
-                    this.printCondition(marker);
+                this.informListeners(marker, token, false)
             }
         });
     }
@@ -272,7 +271,7 @@ class Conditions extends APIModule {
         contents += this.printConditionSubMenu('Spells', 'Spell')
         this.printer.printInfo('Toggle Conditions', contents, {type: 'info'});
     }
-    private registerListener(listener:ConditionsListener, condition:string) {
+    registerListener(listener:ConditionsListener, condition:string) {
         const arr = this.listeners.get(condition)
         if (arr === undefined)
             this.listeners.set(condition, [listener])
@@ -303,8 +302,4 @@ class Conditions extends APIModule {
     }
 }
 
-on('ready', () => {
-    const conditions = new Conditions();
-    conditions.register();
-})
 

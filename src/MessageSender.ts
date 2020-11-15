@@ -74,6 +74,6 @@ class MessageSender {
         if (target === '')
             sendChat(speakingAs, msg, null, {noarchive:true});
         else
-            sendChat(speakingAs, `/w ${target} ${msg}`, null, {noarchive:true})
+            sendChat(speakingAs, `/w "${target}" ${msg}`, null, {noarchive:true})
     }
 }
