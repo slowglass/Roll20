@@ -102,6 +102,7 @@ interface CampaignMutableSynchronousGetProperties {
   turnorder: string;
   initiativepage: string;
   playerpageid: string;
+  token_markers: string;
   playerspecificpages: any; //TODO
 }
 
@@ -500,6 +501,8 @@ declare function on(event: 'change:campaign:turnorder', callback: (obj: Campaign
 declare function on(event: 'change:character', callback: (obj: Character, prev: OldCharacter) => void): void;
 // tslint:disable-next-line:unified-signatures
 declare function on(event: 'change:campaign:playerpageid', callback: () => void): void;
+// tslint:disable-next-line:unified-signatures
+declare function on(event: 'change:graphic:statusmarkers', callback: (obj: Graphic, prev: any) => void): void;
 /**
  * Sends a chat message.
  *
