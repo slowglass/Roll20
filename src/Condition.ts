@@ -156,7 +156,15 @@ class Conditions extends APIModule {
             case 'add':
             case 'remove':
             case 'toggle':
-                this.updateTokenMarkers(msgData.playerid, subCommand, msgData.args, msgData.tokens);
+                if (msgData.tokens.length === 0) {
+                    const targetID = msgData.args.shift()
+                    this.updateTokenMarkerById(msgData.playerid, subCommand, targetID, msgData.args)
+                }
+                else {
+
+                    log(99)
+                    this.updateTokenMarkers(msgData.playerid, subCommand, msgData.args, msgData.tokens);
+                }
             break;
 
             case 'menu':
@@ -222,6 +230,14 @@ class Conditions extends APIModule {
         }
         token.set("statusmarkers", statusmarkers.join(','));
         return announce;
+    }
+    private updateTokenMarkerById(playerid:string, cmd:string, tokenID:string|undefined, conditions:string[]) {
+        if (tokenID !== undefined) {
+            const token = getObj('graphic', tokenID)
+            if (token !== undefined) {
+                this.updateTokenMarkers(playerid, cmd, conditions, [token]);
+            }
+        }
     }
     private updateTokenMarkers(playerid:string, cmd:string, conditions:string[], tokens:Graphic[]) {
         if(!this.accessGranted("updateToken", playerid)) return;
