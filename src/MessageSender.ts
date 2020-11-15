@@ -25,6 +25,14 @@ class MessageSender {
         else
             return   `<${tag} style="margin-bottom: 10px;">${icon}<span style="vertical-align: top;">${text}</span></${tag}>`;
     }
+    list(items:string[], settings:any):string {
+        this.currentSettings = settings;
+
+        let html='<ul ' + this.style('list') + '>';
+        items.forEach((item) => { html += '<li '+ this.style('listItem') + '>'+item+'</li>'; });
+        html += '</ul>';
+        return html;
+    }
     attr(name:string):string {
         let txt = '';
         if (undefined !== this.currentSettings[name])
