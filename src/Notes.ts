@@ -11,9 +11,9 @@ class Notes extends APIModule {
     static readonly buttonStyle = 'float: none; margin-right: 5px;';
     parser:ChatParser = new ChatParser()
     printer:MessageSender = new MessageSender()
-    private onChat(msg: ChatEventData) {
+    private onChat(msg:ChatEventData) {
         const msgData = this.parser.msg(msg, ["!note"]);
-        if (msgData === undefined) return;
+        if (!msgData.matches) return;
         switch (msgData.args[0]) {
             case 'show':
                 const token = msgData.tokens.shift()
