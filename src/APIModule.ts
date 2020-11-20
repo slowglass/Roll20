@@ -60,7 +60,8 @@ abstract class APIModule {
             try {
                 subcommand.apply(msgData)
             } catch (error) {
-                debug("Error:", error)
+                debug("Error:", error.stack)
+                this.msgSender.printInfo('Error', error.toString(), {type: 'error'});
             }
         }
         else {
