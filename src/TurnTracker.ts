@@ -249,6 +249,10 @@ class TurnTracker extends APIModule {
         this.print(this.turnOrder.head());
     }
     startCombat() {
+        const pid = Campaign().get('playerpageid');
+        Campaign().set({ initiativepage: pid });
+
+        this.clearMarkers()
         this.turnOrder.read()
         this.createMarker()
         this.turnOrder.sort()
@@ -299,14 +303,22 @@ class TurnTracker extends APIModule {
         if (token === undefined)
             return
         let settings:any = { ...TurnTracker.uiSettings }
-        let conditions = this.getConditions(te.id);
+
         let imgurl = token.get("imgsrc");
         let name = token.get("name");
         settings.icon = this.printer.icon(imgurl, TurnTracker.headerIconStyle, '45px');
-        let button = this.printer.anchor(this.printer.icon(TurnTracker.nextUrl, TurnTracker.buttonStyle, '30px'), {href:'!tt next', type:'button', style:'float: right; '});
+        let button = this.printer.anchor(this.printer.icon(TurnTracker.nextUrl, TurnTracker.buttonStyle, '30px'),
+            {href:'!tt next', type:'button', style:'float: right; '});
         if (this.isHidden(token)) settings.targets = ['gm'];
-        this.printer.printInfo(name, `It is now your turn<br>${conditions}${button}`, settings);
+        if (name.startsWith('Turn #'))
+            this.printer.printInfo(name, `Start of ${name}${button}`, settings);
+        else {
+            let conditions = this.getConditions(te.id);
+            this.printer.printInfo(name, `It is now your turn<br>${conditions}${button}`, settings);
+        }
 
+        if (!this.isHidden(token))
+            sendPing(token.get('left'), token.get('top'), token.get('_pageid'));
     }
     onTurnOrder() {
         const oldHead = this.turnOrder.head()
