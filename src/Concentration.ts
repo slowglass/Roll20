@@ -16,7 +16,7 @@
 */
 
 class Concentration extends APIModule implements ConditionsListener {
-    readonly version = "0.3"
+    readonly version = "0.4"
     readonly conditions:Conditions
     readonly CONCENTRATING = "Concentrating"
     config:any = {};
@@ -99,15 +99,17 @@ class Concentration extends APIModule implements ConditionsListener {
         });
     }
     private requestRoll(token:Graphic, damage:number) {
-        debug('requestRoll', token)
-        debug('requestRoll', damage)
         if (damage<0) return;
         const dc = damage > 20 ? Math.floor(damage/2) : 10;
-        const message = '<b>'+token.get('name')+'</b> must make a Concentration Check - <b>DC ' + dc + '</b>.';
+        let message = '<b>'+token.get('name')+'</b> must make a Concentration Check - <b>DC ' + dc + '</b>.';
+        message += ' - Damage: '+damage
         this.msgSender.printInfo('', message, {targets: [token.get("name"), 'gm'], type: 'info'});
     }
     private onBarChange(token:Graphic, prev:any) {
         if (!this.hasCondition(token)) return;
+        const pageId =  Campaign().get('playerpageid');
+        if (token.get('_pageid') !== pageId)
+            return
         let bar:('bar1_value'|'bar2_value'|'bar3_value')="bar1_value"
         switch (this.config.bar) {
             case "1":
