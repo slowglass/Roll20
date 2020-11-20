@@ -1,8 +1,6 @@
 /*
- * Version: 0.1
  * Author: Chris Davies
  * GitHun: https://github.com/slowglass/Roll20.git
- * Upload Time: UPLOAD-TIMESTAMP
  *
  * COMMAND !cond || !conditions
  * !conditions [CONDITION] - Shows condition.
@@ -72,6 +70,7 @@ class Conditions extends APIModule {
         return tokenMaker.id;
     }
     private getIcon(name:string, style:string='', size:string='24px'):string {
+        // TODO - refactor to use MessageSender.icon
         const tokenMarker = this.tokenMakers.get(name)
         debug(name, tokenMarker)
         if (tokenMarker === undefined) return ''
@@ -191,7 +190,7 @@ class Conditions extends APIModule {
         const contents = this.printer.list(listItems, {listType:'list'});
         this.printer.printInfo('Usage', contents, {type: 'info'});
     }
-    private getTokenConditions(token:Graphic) {
+    getTokenConditions(token:Graphic) {
         const listItems:string[] = [];
         if (token.get("_subtype") !== 'token') return listItems;
         const statusmarkers = Conditions.getStatusMarkers(token);

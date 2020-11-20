@@ -61,6 +61,17 @@ class MessageSender {
     get(name:string, fallback:string=''):string {
         return (undefined !== this.currentSettings[name]) ? this.currentSettings[name] : fallback;
     }
+    icon(url:string, style='', size='24px') {
+        if (url === undefined) return '';
+        if (!url.startsWith('https://s3.amazonaws.com') && !url.startsWith('https://imgsrv.roll20.net/'))
+            url=`https://imgsrv.roll20.net/?src=${encodeURIComponent(url)}&cb=5`
+        let iconStyle = 'width: '+size+'; height: '+size+';';
+        iconStyle += 'background-size: '+size+' '+size+';';
+        iconStyle += 'background-image: url('+url+');'
+        iconStyle += 'background-repeat: no-repeat;'
+        iconStyle += style;
+        return '<div style="'+iconStyle+'">'+'</div>';
+    }
     printInfo(title:string, text:string, settings:any):void {
         this.currentSettings = settings === undefined ? {} : settings;
         const speakingAs = this.get('who', 'Info')

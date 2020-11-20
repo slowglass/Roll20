@@ -421,11 +421,11 @@ type HandoutCreationProperties = Partial<HandoutMutableSynchronousGetProperties 
  * @param properties The initial values to use for the Roll20 object's properties.
  */
 declare function createObj(type: 'text', properties: TextCreationProperties): Text | undefined;
-declare function createObj(type: 'graphic', properties: GraphicCreationProperties): Graphic | undefined;
 declare function createObj(type: 'character', properties: CharacterCreationProperties): Character | undefined;
 declare function createObj(type: 'attribute', properties: AttributeCreationProperties): Attribute | undefined;
 declare function createObj(type: 'ability', properties: AbilityCreationProperties): Ability | undefined;
 declare function createObj(type: 'handout', properties: HandoutCreationProperties): Handout | undefined;
+declare function createObj(type: 'graphic', properties: GraphicCreationProperties): Graphic | undefined;
 
 /**
  * Gets all Roll20 objects with properties that match a given set of properties.
