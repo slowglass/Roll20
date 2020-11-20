@@ -38,11 +38,9 @@ interface TokenMarkerInfo {
 }
 
 class Conditions extends APIModule {
-    readonly version = '0.2'
+    readonly version = '0.3'
     readonly headerIconStyle = 'margin-right: 5px; margin-top: 5px; display: inline-block;'
     private listeners:Map<string,ConditionsListener[]> = new Map<string,ConditionsListener[]>()
-    parser:ChatParser = new ChatParser()
-    printer:MessageSender = new MessageSender()
     config:any
     markers:Map<string,MarkerInfo> = new Map<string,MarkerInfo>()
     tokenMakers:Map<string,TokenMarkerInfo> = new Map<string,TokenMarkerInfo>()
@@ -50,13 +48,6 @@ class Conditions extends APIModule {
     private static getConditionAsName(name:string):string { return name.replace(/-/g, ' '); }
     private static getStatusMarkers(token:Graphic):string[] { return token.get('statusmarkers').split(","); }
 
-    protected initialise() {
-        this.initMarkers();
-        this.getDefaults();
-        on('chat:message', (msg) => this.onChat(msg));
-        on('change:graphic:statusmarkers', (obj:Graphic, prev:any) => this.onMarkerChange(obj, prev));
-        // Handle condition descriptions when other APIs changing the statusmarkers on a token?
-    }
     private getConditionDescription(name:string):string {
         if (!this.tokenMakers.has(name))
             return "Condition is not supported";
@@ -134,62 +125,6 @@ class Conditions extends APIModule {
             }
         });
     }
-    private onChat(msg:ChatEventData) {
-        const msgData = this.parser.msg(msg, ["!cond", "!conditions"]);
-        if (!msgData.matches) return;
-        const subCommand = msgData.args.shift()
-        if (subCommand === undefined) {
-            this.printHelpInfo()
-            return
-        }
-        switch(subCommand)
-        {
-            case 'help':
-                this.printHelpInfo();
-                break;
-
-            case 'show':
-                this.printTokenConditions(msgData.tokens);
-                break;
-
-            case 'add':
-            case 'remove':
-            case 'toggle':
-                if (msgData.tokens.length === 0) {
-                    const targetID = msgData.args.shift()
-                    this.updateTokenMarkerById(msgData.playerid, subCommand, targetID, msgData.args)
-                }
-                else {
-
-                    log(99)
-                    this.updateTokenMarkers(msgData.playerid, subCommand, msgData.args, msgData.tokens);
-                }
-            break;
-
-            case 'menu':
-                this.printConditionMenu(msgData.playerid);
-                break;
-
-            default:
-                this.printCondition(subCommand);
-                break;
-        }
-    }
-    private printHelpInfo = () => {
-        const listItems = [
-            '<span style="text-decoration: underline">!cond help</span> - Shows this menu.',
-            '<span style="text-decoration: underline">!cond [CONDITION]</span> - Shows the description of the condition entered.',
-            '&nbsp;',
-            '<span style="text-decoration: underline">!cond add [CONDITIONS]</span> - Add the given condition(s) to the selected token(s).',
-            '<span style="text-decoration: underline">!cond toggle [CONDITIONS]</span> - Toggles the given condition(s) on the selected token(s).',
-            '<span style="text-decoration: underline">!cond remove [CONDITIONS]</span> - Removes the given condition(s) from the selected token(s).',
-            '<span style="text-decoration: underline">!cond show [CONDITIONS]</span> - Show the current condition(s) from the selected token(s).',
-            '<span style="text-decoration: underline">!cond menu</span> - Show menu that makes toggling conditions on selected token(s) easier.',
-            '&nbsp;'
-        ];
-        const contents = this.printer.list(listItems, {listType:'list'});
-        this.printer.printInfo('Usage', contents, {type: 'info'});
-    }
     getTokenConditions(token:Graphic) {
         const listItems:string[] = [];
         if (token.get("_subtype") !== 'token') return listItems;
@@ -197,7 +132,7 @@ class Conditions extends APIModule {
         statusmarkers.forEach((tag:string) => {
             if (!tag.includes("::")) return;
             const marker=tag.split(':')[0];
-            const anchor = this.printer.anchor(Conditions.getConditionAsName(marker), {title:'Show Condition '+marker, href:'!cond '+marker, type:"link"});
+            const anchor = this.msgSender.anchor(Conditions.getConditionAsName(marker), {title:'Show Condition '+marker, href:'!cond '+marker, type:"link"});
             listItems.push('<span>'+anchor+'</span> ');
         });
         return listItems;
@@ -209,10 +144,10 @@ class Conditions extends APIModule {
             const listItems = this.getTokenConditions(token);
             let list = "<i>None</i>";
             if (listItems.length>0)
-                list = this.printer.list(listItems, {listType:'list', itemType:'listItem'});
+                list = this.msgSender.list(listItems, {listType:'list', itemType:'listItem'});
             contents += '<b>'+token.get('name')+'</b><br />' + list +"<hr>";
         });
-        this.printer.printInfo('Conditions', contents, {type: 'info'});
+        this.msgSender.printInfo('Conditions', contents, {type: 'info'});
     }
     private updateCondition(cmd:string, token:Graphic, tag:string):boolean {
         let announce = false;
@@ -242,18 +177,18 @@ class Conditions extends APIModule {
         if(!this.accessGranted("updateToken", playerid)) return;
 
         if(tokens.length === 0) {
-            this.printer.printInfo('', 'No tokens are selected.', {type: 'info'});
+            this.msgSender.printInfo('', 'No tokens are selected.', {type: 'info'});
             return;
         }
         if(conditions.length === -0) {
-            this.printer.printInfo('', 'No condition(s) were given.', {type: 'info'});
+            this.msgSender.printInfo('', 'No condition(s) were given.', {type: 'info'});
             return;
         }
         conditions.forEach((condition) => {
             const id = this.getConditionId(condition);
             if (id === undefined) {
                 const conditionName = Conditions.getConditionAsName(condition);
-                this.printer.printInfo('', `The condition ${conditionName} is not supported.`, {type: 'info'});
+                this.msgSender.printInfo('', `The condition ${conditionName} is not supported.`, {type: 'info'});
                 return;
             }
             let announce = false;
@@ -267,24 +202,24 @@ class Conditions extends APIModule {
         const name = Conditions.getConditionAsName(condition);
         const description = this.getConditionDescription(condition);
         const icon = this.getIcon(condition, this.headerIconStyle, '30px');
-        this.printer.printInfo(name, description, {icon, type: 'info'});
+        this.msgSender.printInfo(name, description, {icon, type: 'info'});
     }
     private printConditionSubMenu(title:string, type:string):string {
         let contents =`<div><b>${title}:</b><br />`
         this.markers.forEach((v,name) => {
             if (v.type !== type) return
             if (this.getConditionId(name) === undefined) return
-            contents += this.printer.anchor(this.getIcon(name), {title:'Toggle '+Conditions.getConditionAsName(name), href:'!cond toggle '+name, type:'button', style:'float: none; margin-right: 5px;'});
+            contents += this.msgSender.anchor(this.getIcon(name), {title:'Toggle '+Conditions.getConditionAsName(name), href:'!cond toggle '+name, type:'button', style:'float: none; margin-right: 5px;'});
         })
         contents+='</div>'
         return contents
     }
-    private printConditionMenu(playerid:string) {
-        if(!playerIsGM(playerid)) return;
+    private _printConditionMenu(messageInfo:MessageInfo) {
+        if(!playerIsGM(messageInfo.playerid)) return;
         let contents =''
         contents += this.printConditionSubMenu('Conditions', 'Cond')
         contents += this.printConditionSubMenu('Spells', 'Spell')
-        this.printer.printInfo('Toggle Conditions', contents, {type: 'info'});
+        this.msgSender.printInfo('Toggle Conditions', contents, {type: 'info'});
     }
     registerListener(listener:ConditionsListener, condition:string) {
         const arr = this.listeners.get(condition)
@@ -315,6 +250,42 @@ class Conditions extends APIModule {
         this.updateCondition(cmd, token, tag);
         return true;
     }
+    _changeCondition(cmd:string,info:MessageInfo) {
+        if (info.tokens.length === 0) {
+            const targetID = info.args.shift()
+            this.updateTokenMarkerById(info.playerid, cmd, targetID, info.args)
+        }
+        else {
+            this.updateTokenMarkers(info.playerid, cmd, info.args, info.tokens);
+        }
+    }
+   protected initialise() {
+        this.initMarkers();
+        this.getDefaults();
+        on('change:graphic:statusmarkers', (obj:Graphic, prev:any) => this.onMarkerChange(obj, prev));
+        // Handle condition descriptions when other APIs changing the statusmarkers on a token?
+        this.commands.push("!cond", "!conditions")
+        this.subcommands.set('desc', {
+            args: '',  desc: 'Show the current condition(s) from the selected token(s).\',',
+            apply: msgInfo => {
+                const cond = msgInfo.args.shift()
+                if (cond !==undefined)
+                    this.printCondition(cond)
+            }})
+        this.subcommands.set('show', {
+            args: '[condition]',  desc: 'Shows the description of the condition entered.\',',
+            apply: msgInfo => this.printTokenConditions(msgInfo.tokens)})
+        this.subcommands.set('add', {
+            args: '[condition]',  desc: 'Add the given condition(s) to the selected token(s).\',',
+            apply: msgInfo => this._changeCondition('add', msgInfo)})
+        this.subcommands.set('toggle', {
+            args: '[condition]',  desc: 'Toggles the given condition(s) on the selected token(s).\',',
+            apply: msgInfo => this._changeCondition('toggle', msgInfo)})
+        this.subcommands.set('remove', {
+            args: '[condition]',  desc: 'Removes the given condition(s) from the selected token(s).\',',
+            apply: msgInfo => this._changeCondition('remove', msgInfo)})
+        this.subcommands.set('menu', {
+            args: '',  desc: 'Show menu that makes toggling conditions on selected token(s) easier.\',',
+            apply: msgInfo => this._printConditionMenu(msgInfo)})
+    }
 }
-
-

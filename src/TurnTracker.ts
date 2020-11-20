@@ -190,13 +190,11 @@ class TurnMarker {
 }
 
 class TurnTracker extends APIModule {
-    readonly version = "0.3"
+    readonly version = "0.4"
     static readonly uiSettings = { who: 'Next Turn', type:'info', title_tag: 'h3', targets: []}
     static readonly headerIconStyle = 'margin-right: 5px; margin-top: 5px; display: inline-block; float: left;'
     static readonly buttonStyle = 'margin-right: 1px; margin-top: 1px; display: inline-block;'
     static readonly nextUrl = 'https://s3.amazonaws.com/files.d20.io/images/132700410/wqxZjz4l3dqjHPSfElyOxg/max.png?1589025398'
-    parser:ChatParser = new ChatParser()
-    printer:MessageSender = new MessageSender()
     turnOrder:TurnOrder
     turnMarker:TurnMarker
     conditions:Conditions
@@ -259,6 +257,13 @@ class TurnTracker extends APIModule {
         this.turnOrder.put()
         this.print(this.turnOrder.head());
     }
+    sort() {
+        this.turnOrder.read()
+        const head = this.turnOrder.head()
+        this.turnOrder.sort()
+        this.turnOrder.rotateTo(head)
+        this.turnOrder.put()
+    }
     rotate() {
         this.turnOrder.read()
         this.turnOrder.rotate()
@@ -306,15 +311,15 @@ class TurnTracker extends APIModule {
 
         let imgurl = token.get("imgsrc");
         let name = token.get("name");
-        settings.icon = this.printer.icon(imgurl, TurnTracker.headerIconStyle, '45px');
-        let button = this.printer.anchor(this.printer.icon(TurnTracker.nextUrl, TurnTracker.buttonStyle, '30px'),
+        settings.icon = this.msgSender.icon(imgurl, TurnTracker.headerIconStyle, '45px');
+        let button = this.msgSender.anchor(this.msgSender.icon(TurnTracker.nextUrl, TurnTracker.buttonStyle, '30px'),
             {href:'!tt next', type:'button', style:'float: right; '});
         if (this.isHidden(token)) settings.targets = ['gm'];
         if (name.startsWith('Turn #'))
-            this.printer.printInfo(name, `Start of ${name}${button}`, settings);
+            this.msgSender.printInfo(name, `Start of ${name}${button}`, settings);
         else {
             let conditions = this.getConditions(te.id);
-            this.printer.printInfo(name, `It is now your turn<br>${conditions}${button}`, settings);
+            this.msgSender.printInfo(name, `It is now your turn<br>${conditions}${button}`, settings);
         }
 
         if (!this.isHidden(token))
@@ -340,31 +345,25 @@ class TurnTracker extends APIModule {
                 break;
         }
     }
-    onChat(msg:ChatEventData):void {
-        let msgData =this.parser.msg(msg, ["!tt", "!turntracker"])
-        if (!msgData.matches) return;
-        const subCommand = msgData.args[0]
-        switch (subCommand) {
-            case 'clear':
-                this.clear();
-                break;
-            case 'start':
-                this.startCombat();
-                break;
-            case 'next':
-                this.rotate();
-                break;
-            case 'ping-target':
-                this.ping();
-                break;
-            case 'help':
-            default:
-                break;
-        }
-    }
     protected initialise():void {
-        on('chat:message', (msg:ChatEventData) => this.onChat(msg));
         on('change:campaign:turnorder', () => this.onTurnOrder());
+        this.commands.push("!tt", "!turntracker")
+
+        this.subcommands.set('clear', {
+            args: '',  desc: 'Clears all the entries from the Turn Tracker.\',',
+            apply: _msgInfo => this.clear() })
+        this.subcommands.set('start', {
+            args: '',  desc: 'Starts combat Opening the Turn Tracker and setting the Turn number to one.\',',
+            apply: _msgInfo => this.startCombat() })
+        this.subcommands.set('next', {
+            args: '',  desc: 'Moves the turn tracker to the next player / marker.\',',
+            apply: _msgInfo => this.rotate() })
+        this.subcommands.set('ping', {
+            args: '',  desc: 'Pings the current player.\',',
+            apply: _msgInfo => this.ping() })
+        this.subcommands.set('sort', {
+            args: '',  desc: 'Sorts the turn order.\',',
+            apply: _msgInfo => this.sort() })
         this.turnOrder.read()
     }
 }

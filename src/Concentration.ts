@@ -16,12 +16,10 @@
 */
 
 class Concentration extends APIModule implements ConditionsListener {
-    readonly version = "0.2"
+    readonly version = "0.3"
     readonly conditions:Conditions
     readonly CONCENTRATING = "Concentrating"
     config:any = {};
-    parser:ChatParser = new ChatParser()
-    printer:MessageSender = new MessageSender()
     spells:Set<string> = new Set<string>()
 
     constructor(conditions:Conditions) {
@@ -35,42 +33,23 @@ class Concentration extends APIModule implements ConditionsListener {
     private hasCondition(token:Graphic):boolean { return this.conditions.hasCondition(token, "Concentrating"); }
     private setCondition(token:Graphic) { this.conditions.changeCondition("add", token, "Concentrating"); }
     private clearCondition(token:Graphic) { this.conditions.changeCondition("remove", token, "Concentrating"); }
-    private onChat(msg:ChatEventData) {
-        const spellData = this.parser.spell(msg, this.spells);
-        if (spellData.matches) {
-            this.spellCast(spellData);
-            return;
+    private setTokens(messageInfo:MessageInfo) {
+        const concentration = messageInfo.args.shift()
+        if (concentration !== undefined)
+            messageInfo.tokens.forEach(token => this.addConcentration(messageInfo.playerid, token, concentration))
+    }
+    private clearTokens(messageInfo:MessageInfo) {
+        messageInfo.tokens.forEach(token => this.removeConcentration(messageInfo.playerid, token))
+    }
+    private requestRolls(messageInfo:MessageInfo) {
+        const damStr = messageInfo.args.shift()
+        const damage = parseInt(damStr === undefined ? '' : damStr, 10)
+        if (!isNaN(damage)) {
+            messageInfo.tokens.forEach((token) => {
+                if (!Roll20.hasAccess(messageInfo.playerid, token)) return;
+                this.requestRoll(token, damage);
+            })
         }
-
-        const msgData = this.parser.msg(msg, ["!concentration"]);
-        if (!msgData.matches) return;
-        switch(msgData.args[0])
-        {
-            case 'damaged':
-                debug("Tokens:", msgData.tokens)
-                this.requestRolls(msgData.playerid, msgData.tokens, msgData.args[1]);
-                break;
-            case 'set':
-                this.setTokens(msgData.playerid, msgData.tokens, msgData.args[1]);
-                break;
-            case 'clear':
-                this.clearTokens(msgData.playerid, msgData.tokens);
-                break;
-            default:
-                break;
-        }
-    }
-    private setTokens(playerid:string, tokens:Graphic[], spellName:string) {
-        tokens.forEach(token => this.addConcentration(playerid, token, spellName))
-    }
-    private clearTokens(playerid:string, tokens:Graphic[]) {
-        tokens.forEach(token => this.removeConcentration(playerid, token))
-    }
-    private requestRolls(playerid:string, tokens:Graphic[], damage:string) {
-        tokens.forEach((token) => {
-            if (!Roll20.hasAccess(playerid, token)) return;
-            this.requestRoll(token, parseInt(damage, 10));
-        })
     }
     private printConcentrationMsg(charName:string, isConcentrating:boolean, wasConcentrating:boolean, spell:string) {
         let message = (wasConcentrating) ? '<p style="font-size: 9pt; color: #ff0000;">Previous concentration cancelled.</p>' : '';
@@ -82,7 +61,7 @@ class Concentration extends APIModule implements ConditionsListener {
                 message += `<b>${charName}</b> is now concentrating.`;
         }
         if (message !== '')
-            this.printer.printInfo('', message, {targets: [charName, 'gm'], type: 'info'});
+            this.msgSender.printInfo('', message, {targets: [charName, 'gm'], type: 'info'});
     }
     private setConcentration(name:string, token:Graphic, isConcentrating:boolean, spell:string) {
         const wasConcentrating = this.hasCondition(token)
@@ -125,7 +104,7 @@ class Concentration extends APIModule implements ConditionsListener {
         if (damage<0) return;
         const dc = damage > 20 ? Math.floor(damage/2) : 10;
         const message = '<b>'+token.get('name')+'</b> must make a Concentration Check - <b>DC ' + dc + '</b>.';
-        this.printer.printInfo('', message, {targets: [token.get("name"), 'gm'], type: 'info'});
+        this.msgSender.printInfo('', message, {targets: [token.get("name"), 'gm'], type: 'info'});
     }
     private onBarChange(token:Graphic, prev:any) {
         if (!this.hasCondition(token)) return;
@@ -190,8 +169,25 @@ class Concentration extends APIModule implements ConditionsListener {
                 break
         }
         this.checkAllSpells()
-        on('chat:message', (msg) => this.onChat(msg));
+        this.commands.push("!concentration")
+        this.subcommands.set('damaged', {
+            args: '[amount of damage]',  desc: 'Makes a Concentration check based on damage provided for all selected tokens',
+            apply: msgInfo => this.requestRolls(msgInfo)})
+        this.subcommands.set('set', {
+            args: '[spell name]',  desc: 'Sets the concentration condition for all selected tokens',
+            apply: msgInfo => this.setTokens(msgInfo)})
+        this.subcommands.set('clear', {
+            args: '',  desc: 'Clears the concentration condition for all selected tokens',
+            apply: msgInfo => this.clearTokens(msgInfo)})
         on(barChange, (token, prev) => this.onBarChange(token, prev));
         this.conditions.registerListener(this, "Concentrating");
+        this.onSpellCast = (msg) => {
+            const spellData = this.parser.spell(msg, this.spells);
+            if (spellData.matches) {
+                this.spellCast(spellData);
+                return true
+            }
+            return false
+        }
     }
 }

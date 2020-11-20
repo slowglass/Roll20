@@ -7,42 +7,30 @@
 * !note show <id> : Print a link to the graphic in chat.
 */
 class Notes extends APIModule {
-    readonly version = "0.2"
+    readonly version = "0.3"
     static readonly buttonStyle = 'float: none; margin-right: 5px;';
-    parser:ChatParser = new ChatParser()
-    printer:MessageSender = new MessageSender()
-    private onChat(msg:ChatEventData) {
-        const msgData = this.parser.msg(msg, ["!note"]);
-        if (!msgData.matches) return;
-        switch (msgData.args[0]) {
-            case 'show':
-                const token = msgData.tokens.shift()
-                if (token === undefined)
-                    this.linkFromTarget(msgData.args)
-                else
-                    this.link(token)
-                break
-            default:
-                break
-        }
-    }
-    private linkFromTarget(args:string[]) {
+    private linkFromTarget(messageInfo:MessageInfo) {
+        // usage !note @{selected|token_id} @{target|token_id}
+        let token
+        const args = messageInfo.args
         args.shift()
         const id = args.shift()
-        if (id !== undefined) {
-            const token = getObj("graphic", id);
-            if (token !== undefined)
-                this.link(token)
-        }
+        if (id !== undefined)
+            token = getObj("graphic", id);
+        this.link(token)
+    }
+    private linkFromToken(messageInfo:MessageInfo) {
+        const token = messageInfo.tokens.shift()
+        this.link(token)
     }
     private buildMessage(name:string, handout:Handout):string{
         const id=handout.get("_id");
-        return this.printer.anchor(name, {
+        return this.msgSender.anchor(name, {
             href:`http://journal.roll20.net/handout/${id}`,
             type:'button',
             style:Notes.buttonStyle});
     }
-    private link(token: Graphic|undefined) {
+    private link(token:Graphic|undefined) {
         let a = 'No token defined';
         if (token !== undefined) {
             const name = token.get('name')
@@ -61,13 +49,19 @@ class Notes extends APIModule {
                     a = this.buildMessage(name, h)
             }
         }
-        this.printer.printInfo('Handout', a, {type: 'info'});
+        this.msgSender.printInfo('Handout', a, {type: 'info'});
     }
     // tslint:disable-next-line:no-empty
     protected initialise(): void {
         this.registerEventHandlers()
     }
     protected registerEventHandlers(): void {
-        on('chat:message', (msg) => this.onChat(msg));
+        this.commands.push("!note")
+        this.subcommands.set('token', {
+            args: '',  desc: 'Creates chat link for the selected token\'s linked handout',
+            apply: msgInfo => this.linkFromToken(msgInfo)})
+        this.subcommands.set('target', {
+            args: '&#64;{selected|token_id} &#64;(target|token_id}',  desc: 'Creates chat link for the target token\'s linked handout',
+            apply: msgInfo => this.linkFromTarget(msgInfo)})
     }
 }
