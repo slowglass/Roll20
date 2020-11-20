@@ -32,7 +32,7 @@ enum TurnOrderChange {
 }
 
 class TurnOrder {
-    static readonly empty:TurnEntry = {id:"EMPTY", pr:"-99", custom:"EMPTY"}
+    static readonly empty:TurnEntry = {id:"EMPTY", pr:"-99", custom:""}
     entries:TurnEntry[] = []
     sameOrder(newEntries:TurnEntry[]):boolean {
         if (newEntries === this.entries) return true;
@@ -171,7 +171,7 @@ class TurnMarker {
             throw new Error("Cannot create Maker token")
 
         this.count = count
-        this.turnEntry = { id:token.get('_id'), custom: name, pr:String(pr)}
+        this.turnEntry = { id:token.get('_id'), custom: '', pr:String(pr)}
     }
     getTurnEntry():TurnEntry { return this.turnEntry }
     set(count:number) {
@@ -190,7 +190,7 @@ class TurnMarker {
 }
 
 class TurnTracker extends APIModule {
-    readonly version = "0.2"
+    readonly version = "0.3"
     static readonly uiSettings = { who: 'Next Turn', type:'info', title_tag: 'h3', targets: []}
     static readonly headerIconStyle = 'margin-right: 5px; margin-top: 5px; display: inline-block; float: left;'
     static readonly buttonStyle = 'margin-right: 1px; margin-top: 1px; display: inline-block;'
@@ -268,7 +268,7 @@ class TurnTracker extends APIModule {
     add(token:Graphic, initiative:number) {
         this.turnOrder.read()
         const id = token.get('_id')
-        const custom = token.get('name')
+        const custom = ''
         const pr = String(initiative)
         this.turnOrder.add({id, custom, pr});
         this.turnOrder.put()
