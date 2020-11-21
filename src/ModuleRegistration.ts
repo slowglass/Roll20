@@ -1,5 +1,6 @@
 
 import { APIModule } from "./APIModule";
+import {Buff } from "./Buff";
 import { Center } from "./Center";
 import { Conditions } from "./Condition";
 import { Concentration } from "./Concentration";
@@ -15,7 +16,7 @@ on('ready', () => {
     modules.push(new Concentration(conditions))
     modules.push(new Notes())
     modules.push(new TurnTracker(conditions))
-
+    modules.push(new Buff())
     modules.forEach(m => m.register())
 
 
