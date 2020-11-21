@@ -457,7 +457,7 @@ declare function getObj(type: 'character', id: string): Character | undefined;
 declare function getObj(type: 'attribute', id: string): Attribute | undefined;
 declare function getObj(type: 'ability', id: string): Ability | undefined;
 declare function getObj(type: 'player', id: string): Player | undefined;
-declare function getObj(type: 'page', id: string): any | undefined;
+declare function getObj(type: 'page', id: string): any | undefined
 
 /**
  * Gets the value of an attribute, using the default value from the character sheet if the attribute is not present. value_type is an optional parameter, which you can use to specify "current" or "max".

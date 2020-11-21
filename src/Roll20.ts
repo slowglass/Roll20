@@ -3,6 +3,7 @@
 * GitHub: https://github.com/slowglass/Roll20.git
 */
 
+
 class Roll20 {
     static forEachAttribute(callback: (obj: Attribute) => void) {
         getAllObjs().forEach((o:Roll20Object) => {
@@ -25,11 +26,17 @@ class Roll20 {
             return (o.get('_type') === 'attribute') ?  callback(o) : false
         }) as Attribute[]
     }
+    static findAttributes(properties:any):Attribute[] {
+        return findObjs({...properties, _type:'attribute'}) as Attribute[]
+    }
     static findGraphics(properties:any):Graphic[] {
         return findObjs({...properties, _type:'graphics'}) as Graphic[]
     }
     static findPlayers(properties:any):Player[] {
         return findObjs({...properties, _type:'player'}) as Player[]
+    }
+    static findCharacters(properties:any):Character[] {
+        return findObjs({...properties, _type:'character'}) as Character[]
     }
     private static isControlledBy(playerid:string, controlledby:string) {
         const controlledbyArr = controlledby.split(',')
