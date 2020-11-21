@@ -24,7 +24,10 @@
 
 declare var _:any;
 
-interface ConditionsListener {
+import { APIModule } from "./APIModule";
+import { MessageInfo } from "./MessageReader";
+
+export interface ConditionsListener {
     onConditionsChange(token:Graphic, flag:boolean):boolean
 }
 
@@ -37,7 +40,7 @@ interface TokenMarkerInfo {
     url:string
 }
 
-class Conditions extends APIModule {
+export class Conditions extends APIModule {
     readonly version = '0.3'
     readonly headerIconStyle = 'margin-right: 5px; margin-top: 5px; display: inline-block;'
     private listeners:Map<string,ConditionsListener[]> = new Map<string,ConditionsListener[]>()
@@ -63,7 +66,6 @@ class Conditions extends APIModule {
     private getIcon(name:string, style:string='', size:string='24px'):string {
         // TODO - refactor to use MessageSender.icon
         const tokenMarker = this.tokenMakers.get(name)
-        debug(name, tokenMarker)
         if (tokenMarker === undefined) return ''
         if (tokenMarker.url === undefined) return ''
 
@@ -72,7 +74,6 @@ class Conditions extends APIModule {
         iconStyle += `background-image: url(${tokenMarker.url});`
         iconStyle += `background-repeat: no-repeat;`
         iconStyle += style;
-        debug(name, iconStyle)
         return '<div style="'+iconStyle+'">'+'</div>';
     }
     // @ts-ignore
@@ -87,8 +88,8 @@ class Conditions extends APIModule {
         });
     }
     private getDefaults():void {
-        this.config = {/* yaml:./src/Conditions.config.yaml */}
-        const m:any = {/* yaml:./src/Conditions.markers.yaml */}
+        this.config = {/* import-yaml:./src/Conditions.config.yaml */}
+        const m:any = {/* import-yaml:./src/Conditions.markers.yaml */}
         for(const p in m) {
             if (m.hasOwnProperty(p)) {
                 this.markers.set(p, {type: m[p].type, desc: m[p].desc})

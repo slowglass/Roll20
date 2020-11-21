@@ -3,17 +3,19 @@
 * GitHub: https://github.com/slowglass/Roll20.git
 */
 declare var _:any;
+import { MessageInfo, ChatParser } from "./MessageReader";
+import { MessageSender } from "./MessageSender";
 
-function debug(m:string, o:any) {
+export function debug(m:string, o:any) {
     log(m+":"+JSON.stringify(o))
 }
-interface ChatCommand {
+export interface ChatCommand {
     apply(msgInfo:MessageInfo): void
     args:string
     desc:string
 }
 type OnSpellCast = (msg:ChatEventData) => boolean;
-abstract class APIModule {
+export abstract class APIModule {
     abstract version:string
     protected readonly commands:string[] = []
     protected readonly subcommands:Map<string, ChatCommand> = new Map()

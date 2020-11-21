@@ -1,4 +1,12 @@
 
+import { APIModule } from "./APIModule";
+import { Center } from "./Center";
+import { Conditions } from "./Condition";
+import { Concentration } from "./Concentration";
+import { MessageSender } from "./MessageSender";
+import { Notes } from './Notes'
+import { TurnTracker } from "./TurnTracker";
+
 on('ready', () => {
     const modules:APIModule[] = []
     const conditions = new Conditions()

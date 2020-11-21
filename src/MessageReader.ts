@@ -4,7 +4,7 @@
 */
 
 /* tslint:disable:max-classes-per-file */
-class MessageInfo {
+export class MessageInfo {
     constructor() {
         this.matches = false;
         this.args = []
@@ -28,7 +28,7 @@ class MessageInfo {
     who: string
     tokens: Graphic[]
 }
-class SpellInfo {
+export class SpellInfo {
     constructor() {
         this.matches = false;
         this.name =""
@@ -52,8 +52,7 @@ class SpellInfo {
     who: string
     tokens: Graphic[]
 }
-
-class ChatParser {
+export class ChatParser {
     private static reg(pattern:RegExp, str:string, num:number, defValue:string|undefined):string|undefined {
         const matches = str.match(pattern)
         if (matches === undefined || matches === null || matches[num] === undefined)
@@ -130,7 +129,6 @@ class ChatParser {
         const name = ChatParser.getSpellName(msg.content)
         if (!spells.has(name) && !ChatParser.isSpellMsg(msg.rolltemplate, msg.content))
             return spellInfo;
-        debug("Mgs", msg)
         const character = ChatParser.getCharacterName(msg.content);
         const playerid = msg.playerid;
         const tokens = this.getTokens(msg);

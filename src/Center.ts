@@ -3,7 +3,10 @@
 * GitHub: https://github.com/slowglass/Roll20.git
 *
 */
-class Center extends APIModule {
+import { APIModule } from "./APIModule";;
+import { Roll20 } from "./Roll20";
+
+export class Center extends APIModule {
     readonly version = "0.2"
     private pageID = ''
 

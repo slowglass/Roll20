@@ -4,9 +4,8 @@
   "description": "Roll20 Modules that work with the Roll 20 API",
   "main": "roll20.js",
   "scripts": {
-    "build": "tsc -p .",
-    "watch": "tsc -p . -w",
     "lint": "tslint -p . || exit 0",
+    "build": "parcel build src/ModuleRegistration.ts --no-minify --log-level 3 --out-file Roll20Api.js",
     "test": "echo \"Error: no test specified\""
   },
   "repository": {
@@ -25,6 +24,7 @@
   },
   "homepage": "https://github.com/slowglass/Roll20#readme",
   "devDependencies": {
+    "parcel-bundler": "^1.12.4",
     "tslint": "^6.1.3",
     "typescript": "^4.0.5"
   },

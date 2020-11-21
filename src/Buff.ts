@@ -9,8 +9,11 @@
 * TODO
 * !concentration help - Shop help information
 */
+import { APIModule } from "./APIModule";
+import { GlobalModifier } from "./Attributes";
+import { Roll20 } from "./Roll20";
 
-class Buff extends APIModule {
+export class Buff extends APIModule {
     readonly version = "0.1"
     globalMods:Map<string,GlobalModifier[]> = new Map()
     constructor() {

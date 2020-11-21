@@ -3,6 +3,8 @@
     "allowJs": true,
     "module": "commonjs",
     "moduleResolution": "node",
+    "resolveJsonModule": false,
+    "esModuleInterop": false,
     "outDir": "build",
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
@@ -15,11 +17,11 @@
     "strict": true,
     "lib": ["es6", "dom", "es2017"],
     "target": "es6",
-    "watch": false,
+    "watch": false
   },
   "exclude": [
     "node_modules",
-    ".npm",
+    ".npm"
   ],
   "include": [
     "src/**/*.ts",

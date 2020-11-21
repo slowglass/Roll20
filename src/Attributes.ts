@@ -1,3 +1,5 @@
+import { Roll20 } from "./Roll20";
+
 interface GlobalModifierAttribute
 {
     prefix:string
@@ -6,7 +8,8 @@ interface GlobalModifierAttribute
     flag:string
     global:string
 }
-class GlobalModifier {
+
+export class GlobalModifier {
     static SAVES:GlobalModifierAttribute = {prefix:'savemod', name:"global_save_name", roll: "global_save_roll", flag: "global_save_active_flag", global:'global_save_mod'}
     static ATTACKS:GlobalModifierAttribute = {prefix:'tohitmod', name:"global_attack_name", roll: "global_attack_roll", flag: "global_attack_active_flag", global:'global_attack_mod'}
 

@@ -4,7 +4,7 @@
 */
 
 /* tslint:disable:max-classes-per-file */
-class MessageSender {
+export class MessageSender {
     currentSettings:any
     private readonly styles:Map<string,string>
     constructor() {

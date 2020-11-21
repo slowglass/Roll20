@@ -15,7 +15,11 @@
 * !concentration help - Shop help information
 */
 
-class Concentration extends APIModule implements ConditionsListener {
+import { APIModule } from "./APIModule";
+import { MessageInfo } from "./MessageReader";
+import { Roll20 } from "./Roll20";
+import { Conditions, ConditionsListener } from "./Condition";
+export class Concentration extends APIModule implements ConditionsListener {
     readonly version = "0.4"
     readonly conditions:Conditions
     readonly CONCENTRATING = "Concentrating"
@@ -157,7 +161,7 @@ class Concentration extends APIModule implements ConditionsListener {
         });
     }
     protected initialise():void {
-        this.config = {/* yaml:./src/Concentration.config.yaml */}
+        this.config = {/* import-yaml:./src/Concentration.config.yaml */}
         let barChange:GraphicChangeBarValue = "change:graphic:bar1_value"
         switch (this.config.bar) {
             case "1":

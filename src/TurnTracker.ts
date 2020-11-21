@@ -16,6 +16,10 @@
  * !tt help - Shows help menu.
 */
 
+import { Conditions } from "./Condition";
+import { APIModule } from "./APIModule";
+import { Roll20 } from "./Roll20";
+
 interface TurnEntry {
     id: string
     pr: string
@@ -189,7 +193,7 @@ class TurnMarker {
     }
 }
 
-class TurnTracker extends APIModule {
+export class TurnTracker extends APIModule {
     readonly version = "0.4"
     static readonly uiSettings = { who: 'Next Turn', type:'info', title_tag: 'h3', targets: []}
     static readonly headerIconStyle = 'margin-right: 5px; margin-top: 5px; display: inline-block; float: left;'

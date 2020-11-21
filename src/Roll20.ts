@@ -4,7 +4,7 @@
 */
 
 
-class Roll20 {
+export class Roll20 {
     static forEachAttribute(callback: (obj: Attribute) => void) {
         getAllObjs().forEach((o:Roll20Object) => {
             if (o.get('_type') === 'attribute')

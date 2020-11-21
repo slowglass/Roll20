@@ -1,0 +1,5 @@
+#!/bin/bash
+   npm run lint \
+&& npm run build \
+&& ./bin/roll20.py upload PTest ./dist/Roll20Api.js
+

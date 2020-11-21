@@ -6,7 +6,11 @@
 * !note show @graphic : Print a link to the graphic in chat.
 * !note show <id> : Print a link to the graphic in chat.
 */
-class Notes extends APIModule {
+
+import { APIModule } from "./APIModule";
+import { MessageInfo } from "./MessageReader";
+
+export class Notes extends APIModule {
     readonly version = "0.3"
     static readonly buttonStyle = 'float: none; margin-right: 5px;';
     private linkFromTarget(messageInfo:MessageInfo) {
