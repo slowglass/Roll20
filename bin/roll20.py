@@ -1,6 +1,7 @@
 #!/c/Users/chris/AppData/Local/Programs/Python/Python38-32/python
 import sys
 import os
+import re
 import requests as req
 import pickle
 import yaml
@@ -45,6 +46,14 @@ class Game:
 
 class ConfigInserter:
     def processNext(self, data):
+        # m = re.search(r"{\s/\*\simport-yaml:(^\s*)\s \*/", data)
+        m = re.search(r"{\s*/\*\s*import-yaml:(\S*)\s*\*/\s*}", data)
+        if m:
+            print(m.group(1))
+            file_name=m.group(1)
+            file = open(file_name.strip(), "r")
+            encoded_yaml = json.dumps(yaml.safe_load(file.read()))
+            return (True, data.replace(data[m.start(0):m.end(0)], encoded_yaml))
         prefix = "/* import-yaml:"
         postfix = "*/"
         start = data.find(prefix)
