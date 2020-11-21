@@ -1,0 +1,18 @@
+#!/bin/bash
+   npm run lint \
+&& npm run build \
+&& ./bin/roll20.py reset PTest \
+&& ./bin/roll20.py upload PTest \
+  ./build/MessageReader.js \
+  ./build/MessageSender.js \
+  ./build/Roll20.js  \
+  ./build/Attributes.js \
+  ./build/APIModule.js \
+  ./build/Buff.js \
+  ./build/Center.js \
+  ./build/Concentration.js \
+  ./build/Condition.js \
+  ./build/Notes.js \
+  ./build/TurnTracker.js \
+  ./build/ModuleRegistration.js
+
