@@ -54,11 +54,12 @@ class GlobalModifier {
     }())
     _getFlag(charId:string):boolean {
         const attrId = this._getRepeatingKey(charId, `repeating_${this.attr.prefix}`, this.attr.name, this.name)
-        if (attrId !== '')
+        if (attrId === '')
             return false
 
-        const flag  = `repeating_${this.attr.prefix}_${attrId}_${this.attr.flag}`
-        return this._getAttribute(charId, flag).get("current") === "1"
+        const flagName  = `repeating_${this.attr.prefix}_${attrId}_${this.attr.flag}`
+        const flag = this._getAttribute(charId, flagName).get("current")
+        return String(flag) === "1"
     }
     _set(charId:string, on:boolean) {
         let attrId = this._getRepeatingKey(charId, `repeating_${this.attr.prefix}`, this.attr.name, this.name)
@@ -82,7 +83,7 @@ class GlobalModifier {
         }
     }
     _updateGlobal(charId:string) {
-        const keys = this._getRepeatingKeys(charId, `repeating_${this.attr}`, this.name)
+        const keys = this._getRepeatingKeys(charId, `repeating_${this.attr.prefix}`, this.attr.name)
         const values:string[] = [];
         keys.forEach((attrId) => {
             const name = `repeating_${this.attr.prefix}_${attrId}_${this.attr.name}`
@@ -92,7 +93,7 @@ class GlobalModifier {
             if (f === "1") {
                 const r = this._getAttribute(charId, roll).get("current")
                 const n = this._getAttribute(charId, name).get("current")
-                values.push(`${r}[[${n}]]`)
+                values.push(`[[${r}[${n}]]]`) // [[1d4[Bless]]]
             }
         })
         const sum = (values.length === 0) ? '' : values.join("+")
@@ -103,7 +104,7 @@ class GlobalModifier {
         let key:string = ''
         Roll20.findAttributes({_characterid: c}).forEach((a) => {
             const n = a.get("name")
-            if (key === undefined && n.startsWith(s+'_') && n.endsWith('_'+e)) {
+            if (key === '' && n.startsWith(s+'_') && n.endsWith('_'+e)) {
                 if (a.get("current") === v)
                     key = n.substring(s.length+1, n.length - e.length-1)
             }
@@ -139,6 +140,9 @@ class GlobalModifier {
         }, {caseInsensitive: true})[0] as Attribute;
     }
     _createAttribute(c:string, n:string):Attribute {
+        const attr = this._getAttribute(c, n)
+        if (attr !== undefined)
+            return attr
         return createObj('attribute', {
             _characterid: c,
             name: n,

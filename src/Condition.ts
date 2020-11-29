@@ -63,7 +63,6 @@ class Conditions extends APIModule {
     private getIcon(name:string, style:string='', size:string='24px'):string {
         // TODO - refactor to use MessageSender.icon
         const tokenMarker = this.tokenMakers.get(name)
-        debug(name, tokenMarker)
         if (tokenMarker === undefined) return ''
         if (tokenMarker.url === undefined) return ''
 
@@ -72,7 +71,6 @@ class Conditions extends APIModule {
         iconStyle += `background-image: url(${tokenMarker.url});`
         iconStyle += `background-repeat: no-repeat;`
         iconStyle += style;
-        debug(name, iconStyle)
         return '<div style="'+iconStyle+'">'+'</div>';
     }
     // @ts-ignore
@@ -219,6 +217,7 @@ class Conditions extends APIModule {
         let contents =''
         contents += this.printConditionSubMenu('Conditions', 'Cond')
         contents += this.printConditionSubMenu('Spells', 'Spell')
+        contents += this.printConditionSubMenu('Auras', 'Aura')
         this.msgSender.printInfo('Toggle Conditions', contents, {type: 'info'});
     }
     registerListener(listener:ConditionsListener, condition:string) {

@@ -87,4 +87,44 @@ class MessageSender {
         else
             sendChat(speakingAs, `/w "${target}" ${msg}`, null, {noarchive:true})
     }
+    rollModifier(target:string, charname:string, t1:string, t2:string, _source:string, d1:string) {
+        const msg = "<div class=\"sheet-rolltemplate-simple\">" +
+            "        <div class=\"sheet-container\">" +
+            "            <div class=\"sheet-result\">" +
+            "                    <div class=\"sheet-solo\">" +
+            `                        <span>${d1}</span>` +
+            "                    </div>" +
+            "            </div>" +
+            "            <div class=\"sheet-label\">" +
+            `                <span>${t1} <span>${t2}</span></span>` +
+            "            </div>" +
+            "                <div class=\"sheet-charname\">" +
+            `                    <span>${charname}</span>` +
+            "                </div>" +
+            "        </div>" +
+            "    </div>"
+
+        if (target === '')
+            sendChat(charname, msg, null);
+        else
+            sendChat(charname, `/w "${target}" ${msg}`, null)
+    }
+    rollModifier_NPC(target:string, charname:string, t1:string, t2:string, _source:string, d1:string) {
+        const msg="<div class=\"sheet-rolltemplate-npc\">" +
+            "        <div class=\"sheet-row sheet-header\">" +
+            `            <span>${t1} ${t2}</span>` +
+            "        </div>" +
+            "            <div class=\"sheet-row sheet-subheader\">" +
+            `                <span class=\"sheet-italics\">${charname}</span>` +
+            "            </div>" +
+            "        <div class=\"sheet-arrow-right\"></div>" +
+            "        <div class=\"sheet-row\">" +
+            `                <span class=\"sheet-italics\">Bonus: </span><span>${d1}</span>` +
+            "        </div>" +
+            "    </div>"
+        if (target === '')
+            sendChat(charname, msg, null);
+        else
+            sendChat(charname, `/w "${target}" ${msg}`, null)
+    }
 }

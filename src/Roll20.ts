@@ -3,6 +3,12 @@
 * GitHub: https://github.com/slowglass/Roll20.git
 */
 
+interface TokenPosition {
+    pageId:string
+    x: number
+    y: number
+    units:string
+}
 
 class Roll20 {
     static forEachAttribute(callback: (obj: Attribute) => void) {
@@ -55,6 +61,22 @@ class Roll20 {
         if (character === undefined)
             return false;
         return Roll20.controlsCharacter(playerid, character);
+    }
+    static getPosition(token:Graphic):TokenPosition {
+        const pageId = token.get('_pageid')
+        const page = getObj('page', pageId)
+        const scale = page.get('scale_number')
+        const units = page.get('scale_units')
+        const x = token.get("left")*scale/70.0
+        const y = token.get("top")*scale/70.0
+        return {pageId, x, y, units}
+    }
+    static getDistance(t1:Graphic, t2:Graphic):[number, string] {
+        const p1 = Roll20.getPosition(t1)
+        const p2 = Roll20.getPosition(t2)
+        if (p1.pageId !== p2.pageId) return [-1, 'Different page']
+        const dist = Math.max(Math.abs(p1.x-p2.x),Math.abs(p1.y-p2.y))
+        return [dist, p1.units]
     }
     static isNumber(n: string | number|undefined): boolean {
         if (n === undefined) return false

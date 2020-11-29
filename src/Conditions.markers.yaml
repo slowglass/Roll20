@@ -219,10 +219,10 @@ Vicious-Mockery:
     <p>Creature has disadvantage on the next Attack roll it makes before the
     end of its next turn</p>
 Ally:
-  type: PaladinAura
+  type: Aura
   desc: >
     <p>Creature is the ally of a paladin (but not in range of the paladin's aura)</p>
 Protected:
-  type: PaladinAura
+  type: Aura
   desc: >
     <p>Creature is the ally of a paladin and in range of the paladin's aura</p>

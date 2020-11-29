@@ -7,7 +7,7 @@ on('ready', () => {
     modules.push(new Concentration(conditions))
     modules.push(new Notes())
     modules.push(new TurnTracker(conditions))
-
+    modules.push(new Buff(conditions))
     modules.forEach(m => m.register())
 
 

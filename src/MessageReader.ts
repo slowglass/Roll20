@@ -30,6 +30,7 @@ class MessageInfo {
 }
 class SpellInfo {
     constructor() {
+        this.type = "spell"
         this.matches = false;
         this.name =""
         this.character = ""
@@ -46,14 +47,59 @@ class SpellInfo {
         this.tokens = ts
     }
     matches: boolean
+    type: "spell"
     name: string
     character: string
     playerid: string
     who: string
     tokens: Graphic[]
 }
-
+class AttackInfo {
+    constructor() {
+        this.type = "attack"
+        this.matches = false;
+        this.character = ''
+        this.tokens = []
+    }
+    set(c:string, ts:Graphic[]) {
+        this.matches = true;
+        this.character = c
+        this.tokens = ts
+    }
+    matches: boolean
+    type: "attack"
+    character: string
+    tokens: Graphic[]
+}
+class SaveInfo {
+    constructor() {
+        this.type = "save"
+        this.matches = false;
+        this.name = ''
+        this.character = ''
+        this.tokens = []
+    }
+    set(n:string, c:string, ts:Graphic[]) {
+        this.matches = true;
+        this.name = n
+        this.character = c
+        this.tokens = ts
+    }
+    matches: boolean
+    type: "save"
+    name: string
+    character: string
+    tokens: Graphic[]
+}
 class ChatParser {
+    static saves:any = {
+        'Strength': "rname=^{strength-save",
+        'Dexterity':"rname=^{dexterity-save",
+        'Constitution':"rname=^{constitution-save",
+        'Intelligence':"rname=^{intelligence-save",
+        'Wisdom':"rname=^{wisdom-save",
+        'Charisma':"rname=^{charisma-save"
+    }
     private static reg(pattern:RegExp, str:string, num:number, defValue:string|undefined):string|undefined {
         const matches = str.match(pattern)
         if (matches === undefined || matches === null || matches[num] === undefined)
@@ -123,6 +169,38 @@ class ChatParser {
     private static isSpellMsg(template:string, content:string):boolean {
         return  template === 'spell' && content.includes("{{concentration=1}}");
     }
+    private static isSaveMsg(template:string, content:string):boolean {
+        if (template === 'simple' || template === 'npc') {
+            const values:string[] = Object.values(ChatParser.saves)
+            if (values.some((s: string) => content.includes(s)))
+                return true
+        }
+        return false
+    }
+    attack(msg: ChatEventData) : AttackInfo {
+        const attackInfo = new AttackInfo()
+        if (msg === undefined || msg.rolltemplate === undefined)
+            return attackInfo
+        if (msg.rolltemplate !== 'npcatk' && msg.rolltemplate !== 'atk')
+            return attackInfo
+        const character = ChatParser.getCharacterName(msg.content);
+        const tokens = this.getTokens(msg);
+        attackInfo.set(character, tokens)
+        return attackInfo
+    }
+    save(msg: ChatEventData) : SaveInfo {
+        const saveInfo = new SaveInfo()
+        if (msg === undefined || msg.rolltemplate === undefined)
+            return saveInfo
+        if (!ChatParser.isSaveMsg(msg.rolltemplate, msg.content))
+            return saveInfo;
+        const keys:string[] = Object.keys(ChatParser.saves)
+        const key = keys.find((k:string) => msg.content.includes(ChatParser.saves[k])) as string
+        const character = ChatParser.getCharacterName(msg.content);
+        const tokens = this.getTokens(msg);
+        saveInfo.set(key, character, tokens)
+        return saveInfo
+    }
     spell(msg: ChatEventData, spells:Set<string>) : SpellInfo {
         const spellInfo = new SpellInfo()
         if (msg === undefined || msg.rolltemplate === undefined)
@@ -130,12 +208,16 @@ class ChatParser {
         const name = ChatParser.getSpellName(msg.content)
         if (!spells.has(name) && !ChatParser.isSpellMsg(msg.rolltemplate, msg.content))
             return spellInfo;
-        debug("Mgs", msg)
         const character = ChatParser.getCharacterName(msg.content);
         const playerid = msg.playerid;
         const tokens = this.getTokens(msg);
         const who=ChatParser.getWho(msg);
         spellInfo.set(name, character, playerid, who, tokens)
         return spellInfo;
+    }
+    chat_info(msg: ChatEventData) : SaveInfo|AttackInfo {
+        let info:SaveInfo|AttackInfo = this.save(msg)
+        if (!info.matches) info = this.attack(msg)
+        return info
     }
 }
