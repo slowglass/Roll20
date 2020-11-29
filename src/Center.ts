@@ -4,7 +4,7 @@
 *
 */
 class Center extends APIModule {
-    readonly version = "0.2"
+    readonly version = "1.0"
     private pageID = ''
 
     private pingPlayers() {

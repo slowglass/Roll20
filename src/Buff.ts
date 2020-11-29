@@ -11,7 +11,7 @@
 */
 
 class Buff extends APIModule {
-    readonly version = "0.1"
+    readonly version = "1.0"
     readonly conditions:Conditions
     globalMods:Map<string,GlobalModifier[]> = new Map()
     constructor(conditions:Conditions) {

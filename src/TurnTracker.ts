@@ -190,7 +190,7 @@ class TurnMarker {
 }
 
 class TurnTracker extends APIModule {
-    readonly version = "0.4"
+    readonly version = "1.0"
     static readonly uiSettings = { who: 'Next Turn', type:'info', title_tag: 'h3', targets: []}
     static readonly headerIconStyle = 'margin-right: 5px; margin-top: 5px; display: inline-block; float: left;'
     static readonly buttonStyle = 'margin-right: 1px; margin-top: 1px; display: inline-block;'

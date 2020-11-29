@@ -7,7 +7,7 @@
 * !note show <id> : Print a link to the graphic in chat.
 */
 class Notes extends APIModule {
-    readonly version = "0.3"
+    readonly version = "1.0"
     static readonly buttonStyle = 'float: none; margin-right: 5px;';
     private linkFromTarget(messageInfo:MessageInfo) {
         // usage !note @{selected|token_id} @{target|token_id}

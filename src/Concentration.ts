@@ -16,7 +16,7 @@
 */
 
 class Concentration extends APIModule implements ConditionsListener {
-    readonly version = "0.4"
+    readonly version = "1.0"
     readonly conditions:Conditions
     readonly CONCENTRATING = "Concentrating"
     config:any = {};
