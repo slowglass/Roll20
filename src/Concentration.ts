@@ -102,7 +102,10 @@ class Concentration extends APIModule implements ConditionsListener {
         if (damage<0) return;
         const dc = damage > 20 ? Math.floor(damage/2) : 10;
         let message = '<b>'+token.get('name')+'</b> must make a Concentration Check - <b>DC ' + dc + '</b>.';
-        message += ' - Damage: '+damage
+        message += '<br /> - Damage: '+damage
+        const char = Concentration.getCharName(token)
+        if (char === "Gunhildrr Ormsdottir" || char === "Gunhildrr")
+            message  += '<br /> - Bonus: +2'
         this.msgSender.printInfo('', message, {targets: [token.get("name"), 'gm'], type: 'info'});
     }
     private onBarChange(token:Graphic, prev:any) {
