@@ -250,6 +250,13 @@ class Conditions extends APIModule {
         return true;
     }
     _changeCondition(cmd:string,info:MessageInfo) {
+        if (cmd === "set") {
+            const value = info.args.shift()
+            if (value === "1")
+                cmd = "add";
+            else
+                cmd = "remove";
+        }
         if (info.tokens.length === 0) {
             const targetID = info.args.shift()
             this.updateTokenMarkerById(info.playerid, cmd, targetID, info.args)
@@ -277,6 +284,9 @@ class Conditions extends APIModule {
         this.subcommands.set('add', {
             args: '[condition]',  desc: 'Add the given condition(s) to the selected token(s).\',',
             apply: msgInfo => this._changeCondition('add', msgInfo)})
+       this.subcommands.set('set', {
+           args: '[condition]',  desc: 'Set the condition(s) of the selected token(s) to the given value.\',',
+           apply: msgInfo => this._changeCondition('set', msgInfo)})
         this.subcommands.set('toggle', {
             args: '[condition]',  desc: 'Toggles the given condition(s) on the selected token(s).\',',
             apply: msgInfo => this._changeCondition('toggle', msgInfo)})

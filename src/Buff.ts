@@ -116,7 +116,7 @@ class Buff extends APIModule {
             if (char === "Woffler")
                 this.gnonish_save(char, info.name)
             if (char === "Siri" || char === "Sigrid  Nordbakken (Siri)")
-                this.msgSender.rollModifier('', char, 'Dwarven Resilience', '', '', "Poison<br/>Advantage<br/>Resistance");if (char === "Siri")
+                this.msgSender.rollModifier('', char, 'Dwarven Resilience', '', '', "Poison<br/>Advantage<br/>Resistance");
             if (char === "Siri"  || char === "Sigrid  Nordbakken (Siri)")
                 this.msgSender.rollModifier('', char, 'Divine Health', '', '', "Disease<br/>Immune");
             if (char === "Gunhildrr Ormsdottir" || char === "Gunhildrr")
