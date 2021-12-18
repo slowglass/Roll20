@@ -1,8 +1,26 @@
 #!/bin/bash
+
+deploy() {
+  cmd="$1"; shift
+  game="$1"; shift
+  if [[ "$cmd" == "clear" ]]; then
+    clear_code "$game"
+  else
+    deploy_code "$game"
+fi
+}
+
+clear_code() {
+  game=$1
+  ./bin/roll20.py reset "${game}"
+}
+
+deploy_code() {
+  game=$1
    npm run lint \
 && npm run build \
-&& ./bin/roll20.py reset Uppsala \
-&& ./bin/roll20.py upload Uppsala \
+&& ./bin/roll20.py reset "${game}" \
+&& ./bin/roll20.py upload "${game}" \
   ./build/MessageReader.js \
   ./build/MessageSender.js \
   ./build/Roll20.js  \
@@ -15,4 +33,33 @@
   ./build/Notes.js \
   ./build/TurnTracker.js \
   ./build/ModuleRegistration.js
+}
 
+cmd="$1"; shift
+group="$1"; shift
+if [[ "${cmd}" == "" ]]; then
+  cmd="deploy"
+fi
+if [[ "${group}" == "all" ]]; then
+  deploy ${cmd} "The Sunless Citadel (Keep)"
+  deploy ${cmd} "SotT RPG"
+  deploy ${cmd} "Uppsala"
+  deploy ${cmd} "Peloponnesian Isles"
+elif [[ "${group}" == "SotT" ]]; then
+  deploy ${cmd} "The Sunless Citadel (Keep)"
+else
+  deploy ${cmd} "Peloponnesian Isles"
+fi
+
+
+#G ChatSetAttr
+#G TokenMod
+#G TokenLock
+#G Aura/Tint HealthColors
+#G Roll20 Audio Master
+#G 5th Edition OGL by Roll20 Companion
+#G 5E Resting in Style
+#G DryErase
+
+#G UniversalVTTImporter
+#G TableExport
