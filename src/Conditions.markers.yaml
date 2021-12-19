@@ -149,6 +149,11 @@ Heat-Metal:
   desc: >
     <p>A piece of metal the creature is holding / wearing is hot. The caster
     can reapply the damage on as a bonus action</p>
+Hunters-Mark:
+  type: Spell
+  desc: >
+    <p>Creature has been target's by the Hunter's Mark Spell. Until the spell ends the caster
+    deals an extra 1d6 to the target with any weapon attack</p>
 Mage-Hand:
   type: Spell
   desc: >
